@@ -3,21 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shan Koe Mee - Full Version</title>
+    <title>Shan Koe Mee - Real Deal Edition</title>
     <style>
-        :root { --gold: #ffd700; --wood: #3d2610; --felt: #1b4d31; }
+        :root { 
+            --gold: #ffd700; 
+            --wood: #5d3a1a; 
+            --felt: #1b4d31; 
+            --card-w: 30px;
+            --card-h: 45px;
+        }
         body { background: #121212; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; overflow: hidden; }
         
+        /* Game Container & Physical Table */
         .game-container { 
             position: relative; width: 380px; height: 660px; 
-            background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%); 
+            background: #1a1a1a;
             border: 8px solid var(--wood); border-radius: 40px; overflow: hidden;
             box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
+        /* 3D Felt Table Surface */
+        .table-surface {
+            position: absolute; top: 10%; left: 5%; width: 90%; height: 80%;
+            background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%);
+            border-radius: 150px; /* Oval shape */
+            border: 4px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
         /* Lobby & Menus */
         #lobby {
-            position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.92);
+            position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
             z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .room-card {
@@ -25,43 +42,96 @@
             width: 80%; padding: 15px; margin: 8px; text-align: center; cursor: pointer; transition: 0.2s;
         }
         .room-card:active { transform: scale(0.95); }
-        .room-locked { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; }
 
-        /* Game Elements */
-        .player { position: absolute; text-align: center; width: 90px; }
-        .p1 { bottom: 25px; left: 145px; transform: scale(1.1); }
-        .p2 { left: 15px; top: 280px; } .p3 { left: 40px; top: 80px; }
-        .p4 { right: 40px; top: 80px; } .p5 { right: 15px; top: 280px; }
-        .dealer-area { position: absolute; top: 220px; left: 140px; text-align: center; width: 100px; }
+        /* --- Player & Dealer Visuals --- */
+        .seat { position: absolute; text-align: center; width: 80px; z-index: 10; }
         
-        .avatar { width: 42px; height: 42px; background: #222; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .cards-area { display: flex; justify-content: center; min-height: 50px; margin-top: 5px; }
-        .card { 
-            width: 30px; height: 45px; background: white; color: black; border-radius: 4px; 
-            font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; margin: 0 -4px; opacity: 0; transform: translateY(-50px); transition: 0.4s;
+        /* Seat Positions around the oval table */
+        .p1 { bottom: 20px; left: 150px; transform: scale(1.1); } /* YOU */
+        .p2 { left: 10px; top: 300px; } 
+        .p3 { left: 50px; top: 90px; } 
+        .p4 { right: 50px; top: 90px; } 
+        .p5 { right: 10px; top: 300px; } 
+
+        .dealer-area { 
+            position: absolute; top: 180px; left: 140px; 
+            text-align: center; width: 100px; z-index: 10; 
         }
-        .card.dealt { opacity: 1; transform: translateY(0); }
+        
+        /* Dealer Visual (Show Deck & Person) */
+        .dealer-visual {
+            position: relative; width: 60px; height: 60px; margin: 0 auto;
+        }
+        .dealer-icon { font-size: 40px; } /* 👨‍💼 */
+        
+        /* The Physical Deck of Cards next to dealer */
+        .card-deck {
+            position: absolute; bottom: 0; right: -10px;
+            width: var(--card-w); height: var(--card-h);
+            background: linear-gradient(135deg, #7a0000, #b30000);
+            border: 1px solid var(--gold); border-radius: 4px;
+            box-shadow: 2px 2px 2px rgba(0,0,0,0.5), 1px 1px 0 gold, 2px 2px 0 #b30000; /* Stacked effect */
+        }
+
+        /* Person Icons */
+        .avatar { width: 40px; height: 40px; background: #222; border: 2px solid #555; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #aaa; }
+        .p1 .avatar { border-color: var(--gold); color: var(--gold); }
+
+        /* --- Cards UI & Animation --- */
+        .cards-area { display: flex; justify-content: center; min-height: 50px; margin-top: 5px; position: relative; }
+        
+        .card { 
+            width: var(--card-w); height: var(--card-h); background: white; color: black; border-radius: 4px; 
+            font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; margin: 0 -4px; 
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            
+            /* Animation properties */
+            position: absolute; /* Needed for dealing animation */
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.2s;
+            z-index: 5;
+        }
+        
+        /* Final state after dealing */
+        .card.dealt { 
+            position: relative; /* Back to flex layout */
+            opacity: 1; transform: translate(0, 0) rotate(0deg) !important; 
+            margin: 0 -4px;
+        }
+        
         .red { color: #d00; }
 
-        .result-tag { font-size: 11px; color: var(--gold); font-weight: bold; min-height: 15px; margin: 2px 0; }
+        /* Animation Keyframes - Cards flying from Dealer Deck */
+        @keyframes dealToP1 { from { opacity: 1; transform: translate(0px, -150px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+        @keyframes dealToP2 { from { opacity: 1; transform: translate(130px, -110px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+        @keyframes dealToP3 { from { opacity: 1; transform: translate(90px, 90px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+        @keyframes dealToP4 { from { opacity: 1; transform: translate(-90px, 90px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+        @keyframes dealToP5 { from { opacity: 1; transform: translate(-130px, -110px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+        @keyframes dealToD { from { opacity: 1; transform: translate(0px, 30px) rotate(180deg); } to { opacity: 1; transform: translate(0, 0) rotate(0deg); } }
+
+        /* Game Text */
+        .result-tag { font-size: 11px; color: var(--gold); font-weight: bold; min-height: 15px; margin: 2px 0; text-shadow: 1px 1px 1px black; }
         .balance-text { font-size: 11px; color: #00ff00; }
+        .name-tag { font-size: 10px; color: #ccc; }
 
         /* Buttons */
-        .controls { position: absolute; bottom: 160px; width: 100%; text-align: center; display: none; z-index: 100; }
-        .btn { padding: 10px 18px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin: 0 5px; }
-        .btn-hit { background: var(--gold); } .btn-stay { background: #eee; }
-        .btn-main { position: absolute; bottom: 170px; left: 50%; transform: translateX(-50%); background: #e63946; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; z-index: 99; }
+        .controls { position: absolute; bottom: 150px; width: 100%; text-align: center; display: none; z-index: 100; }
+        .btn { padding: 10px 18px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin: 0 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .btn-hit { background: var(--gold); color: #333; } .btn-stay { background: #eee; color: #333; }
+        .btn-main { position: absolute; bottom: 160px; left: 50%; transform: translateX(-50%); background: #e63946; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; z-index: 99; box-shadow: 0 4px 0 #b32d38; }
+        .btn-main:active { transform: translateX(-50%) translateY(2px); box-shadow: 0 2px 0 #b32d38; }
         
-        .bonus-bar { display: flex; gap: 8px; margin-top: 15px; }
-        .small-btn { background: #333; color: #ccc; border: 1px solid #555; padding: 6px 10px; border-radius: 8px; font-size: 10px; cursor: pointer; }
+        .small-btn { background: #333; color: #ccc; border: 1px solid #555; padding: 5px 8px; border-radius: 8px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
+    <div class="table-surface"></div>
+
     <div id="lobby">
-        <h2 style="color: var(--gold); margin-bottom: 5px;">Lucky Shan Koe Mee</h2>
+        <h2 style="color: var(--gold); margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Lucky Shan Koe Mee</h2>
         <p style="margin-bottom: 20px; font-size: 14px;">လက်ကျန်ငွေ: <span id="lobby-bal" style="color:#0f0">0</span> K</p>
         
         <div class="room-card" onclick="joinRoom(100, 500)">
@@ -74,26 +144,25 @@
             <p style="font-size: 11px; margin: 5px 0;">လောင်းကြေး: 1,000 | အနည်းဆုံး: 5,000</p>
         </div>
 
-        <div class="bonus-bar">
-            <button class="small-btn" onclick="useReferral()">🎁 လူခေါ် Code</button>
-            <button class="small-btn" onclick="resetMoney()">🔄 Reset Game</button>
+        <div style="margin-top: 15px;">
+            <button class="small-btn" onclick="resetMoney()">🔄 Reset Money</button>
         </div>
-        <p style="font-size: 10px; color: #666; margin-top: 15px;">Daily Bonus: ၁ ရက် ၁ ခါ ၁,၀၀၀ ကျပ်</p>
     </div>
 
-    <button onclick="exitToLobby()" style="position:absolute; top:15px; left:15px; background:rgba(0,0,0,0.4); color:white; border:1px solid #666; padding:4px 8px; border-radius:5px; z-index:100; font-size:10px;">BACK</button>
+    <button onclick="exitToLobby()" style="position:absolute; top:15px; left:15px; background:rgba(0,0,0,0.5); color:white; border:1px solid #666; padding:4px 8px; border-radius:5px; z-index:100; font-size:10px; cursor:pointer;">LOBBY</button>
     
     <div class="dealer-area">
-        <div class="avatar">🏦</div>
+        <div class="dealer-visual">
+            <div class="dealer-icon">👨‍💼</div> <div class="card-deck" id="main-deck"></div> </div>
         <div class="cards-area" id="cd"></div>
         <div id="rd" class="result-tag"></div>
     </div>
 
-    <div class="player p1"><div class="avatar">😎</div><div class="cards-area" id="c1"></div><div id="r1" class="result-tag"></div><div class="balance-text" id="b1">0</div><small>YOU</small></div>
-    <div class="player p2"><div class="avatar">👤</div><div class="cards-area" id="c2"></div><div id="r2" class="result-tag"></div><div class="balance-text">5,400</div></div>
-    <div class="player p3"><div class="avatar">👤</div><div class="cards-area" id="c3"></div><div id="r3" class="result-tag"></div><div class="balance-text">10,200</div></div>
-    <div class="player p4"><div class="avatar">👤</div><div class="cards-area" id="c4"></div><div id="r4" class="result-tag"></div><div class="balance-text">7,800</div></div>
-    <div class="player p5"><div class="avatar">👤</div><div class="cards-area" id="c5"></div><div id="r5" class="result-tag"></div><div class="balance-text">12,000</div></div>
+    <div class="seat p1"><div class="avatar">👤</div><div class="cards-area" id="c1"></div><div id="r1" class="result-tag"></div><div class="balance-text" id="b1">0</div><div class="name-tag">YOU</div></div>
+    <div class="seat p2"><div class="avatar">👩</div><div class="cards-area" id="c2"></div><div id="r2" class="result-tag"></div><div class="balance-text">5,400</div><div class="name-tag">Player 2</div></div>
+    <div class="seat p3"><div class="avatar">👨</div><div class="cards-area" id="c3"></div><div id="r3" class="result-tag"></div><div class="balance-text">10,200</div><div class="name-tag">Player 3</div></div>
+    <div class="seat p4"><div class="avatar">🧑</div><div class="cards-area" id="c4"></div><div id="r4" class="result-tag"></div><div class="balance-text">7,800</div><div class="name-tag">Player 4</div></div>
+    <div class="seat p5"><div class="avatar">👧</div><div class="cards-area" id="c5"></div><div id="r5" class="result-tag"></div><div class="balance-text">12,000</div><div class="name-tag">Player 5</div></div>
 
     <div id="controls" class="controls">
         <button class="btn btn-stay" onclick="stay()">နားမည်</button>
@@ -104,120 +173,114 @@
 </div>
 
 <script>
-    // --- Data Persistence (Money & Bonuses) ---
+    // --- Data & Persistence ---
     let balance = parseInt(localStorage.getItem('skm_bal')) || 5000;
-    let lastLogin = localStorage.getItem('skm_last_login');
-    let hasUsedReferral = localStorage.getItem('skm_referred') === 'true';
-
     let bet = 100;
     let deck = [];
     let hands = { dealer:[], p1:[], p2:[], p3:[], p4:[], p5:[] };
     const suits = [{s:'♠', c:'black'}, {s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}];
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-    // --- System Functions ---
-    function saveGame() {
-        localStorage.setItem('skm_bal', balance);
-    }
-
-    function checkDailyBonus() {
-        const today = new Date().toDateString();
-        if (lastLogin !== today) {
-            balance += 1000;
-            localStorage.setItem('skm_last_login', today);
-            alert("🎊 နေ့စဉ်ဘောနပ် ၁,၀၀၀ ကျပ် ရရှိပါသည်!");
-            saveGame();
-            updateLobbyUI();
-        }
-    }
-
-    function useReferral() {
-        if (hasUsedReferral) return alert("Code တစ်ခါသုံးပြီးသား ဖြစ်ပါတယ်!");
-        let code = prompt("Referral Code ကို ရိုက်ထည့်ပါ (ဥပမာ: FRIEND77):");
-        if (code === "FRIEND77" || code === "SHAN99") {
-            balance += 3000;
-            hasUsedReferral = true;
-            localStorage.setItem('skm_referred', 'true');
-            alert("🎁 လူခေါ်ဘောနပ် ၃,၀၀၀ ကျပ် ထည့်သွင်းပေးလိုက်ပါပြီ!");
-            saveGame();
-            updateLobbyUI();
-        } else {
-            alert("Code မှားယွင်းနေပါသည်။");
-        }
-    }
+    // --- System & UI ---
+    function saveGame() { localStorage.setItem('skm_bal', balance); }
 
     function resetMoney() {
-        if(confirm("ဂိမ်းကို အစကပြန်စမလား?")) {
-            balance = 5000;
-            saveGame();
-            updateLobbyUI();
-        }
+        if(confirm("ငွေပမာဏကို ၅,၀၀၀ သို့ ပြန်ပြင်မလား?")) { balance = 5000; saveGame(); updateLobbyUI(); }
     }
 
-    // --- Game Logic ---
     function updateLobbyUI() {
         document.getElementById('lobby-bal').innerText = balance.toLocaleString();
         document.getElementById('vip-room').className = balance < 5000 ? 'room-card room-locked' : 'room-card';
     }
 
     function joinRoom(b, min) {
-        if(balance < min) return alert("ငွေမလောက်ပါ! အနည်းဆုံး " + min + " ရှိရပါမယ်။");
+        if(balance < min) return alert("ငွေမလောက်ပါ!");
         bet = b;
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('b1').innerText = balance.toLocaleString() + " K";
     }
 
-    function exitToLobby() {
-        document.getElementById('lobby').style.display = 'flex';
-        updateLobbyUI();
-    }
+    function exitToLobby() { document.getElementById('lobby').style.display = 'flex'; updateLobbyUI(); }
 
+    // --- Core Card Logic ---
     function getVal(r) {
         if(['10','J','Q','K'].includes(r)) return 0;
         return (r === 'A') ? 1 : parseInt(r);
     }
-
     function getScore(h) { return h.reduce((s, c) => s + getVal(c.r), 0) % 10; }
 
+    // --- Game Flow with Animation ---
     async function startRound() {
         if(balance < bet) return alert("ပိုက်ဆံမလောက်တော့ပါ!");
         document.getElementById('dealBtn').style.display = 'none';
         resetTable();
         
+        // Shuffle Deck
         deck = [];
         suits.forEach(s => ranks.forEach(r => deck.push({r, ...s})));
         deck.sort(() => Math.random() - 0.5);
 
+        // ** Dealing Phase (Visual Animation) **
+        // Deal 2 cards to everyone, one by one (Simulating real dealing)
         for(let i=0; i<2; i++) {
-            for(let p=1; p<=5; p++) await draw('p'+p);
-            await draw('dealer');
+            // Clockwise dealing: P1 -> P2 -> P3 -> P4 -> P5 -> Dealer
+            for(let p=1; p<=5; p++) await animatedDraw('p'+p, true); // true = hidden card
+            await animatedDraw('dealer', true);
         }
 
+        // Show player's cards after dealing
+        revealHand('p1');
+
         if(getScore(hands.p1) >= 8) {
-            revealHand('p1');
             setTimeout(autoPlayBots, 1000);
         } else {
-            revealHand('p1');
             document.getElementById('controls').style.display = 'block';
         }
     }
 
-    async function draw(pid) {
-        const card = deck.pop();
-        hands[pid].push(card);
-        const area = document.getElementById(pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1));
+    // New Function for Card Flying Animation
+    async function animatedDraw(pid, hidden = false) {
+        const cardData = deck.pop();
+        hands[pid].push(cardData);
+
+        const areaId = pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1);
+        const area = document.getElementById(areaId);
+        
+        // Create the card element for animation
         const cDiv = document.createElement('div');
         cDiv.className = `card`;
+        
+        // Setup animation class based on player id
+        const animName = pid === 'dealer' ? 'dealToD' : 'dealToP' + pid.charAt(1);
+        cDiv.style.animation = `${animName} 0.4s ease-out forwards`;
+        
         area.appendChild(cDiv);
-        setTimeout(() => cDiv.classList.add('dealt'), 50);
-        await new Promise(r => setTimeout(r, 120));
+
+        // After animation finishes, change to static layout
+        return new Promise(r => setTimeout(() => {
+            cDiv.classList.add('dealt'); // change position to relative
+            cDiv.style.animation = ""; // reset animation
+            
+            // Show back of card for now
+            cDiv.style.background = 'linear-gradient(135deg, #7a0000, #b30000)';
+            cDiv.style.border = '1px solid var(--gold)';
+
+            r(); // finish promise
+        }, 400)); // matches animation duration
     }
 
     function revealHand(pid) {
-        const area = document.getElementById(pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1));
-        area.innerHTML = hands[pid].map(c => 
-            `<div class="card dealt ${c.c}"><span>${c.r}</span><span>${c.s}</span></div>`
-        ).join('');
+        const areaId = pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1);
+        const area = document.getElementById(areaId);
+        area.innerHTML = ""; // clear animated cards
+
+        hands[pid].forEach(c => {
+            const cDiv = document.createElement('div');
+            cDiv.className = `card dealt ${c.c}`;
+            cDiv.innerHTML = `<span>${c.r}</span><span>${c.s}</span>`;
+            area.appendChild(cDiv);
+        });
+
         const s = getScore(hands[pid]);
         const label = (s >= 8 && hands[pid].length === 2) ? `ရှမ်း ${s}` : `${s} မှတ်`;
         document.getElementById(pid === 'dealer' ? 'rd' : 'r' + pid.charAt(1)).innerText = label;
@@ -225,8 +288,8 @@
 
     async function hit() {
         document.getElementById('controls').style.display = 'none';
-        await draw('p1');
-        revealHand('p1');
+        await animatedDraw('p1'); // animate new card
+        revealHand('p1'); // show all cards
         setTimeout(autoPlayBots, 500);
     }
 
@@ -237,10 +300,10 @@
 
     async function autoPlayBots() {
         for(let p=2; p<=5; p++) {
-            if(getScore(hands['p'+p]) < 5) await draw('p'+p);
+            if(getScore(hands['p'+p]) < 5) await animatedDraw('p'+p);
             revealHand('p'+p);
         }
-        if(getScore(hands.dealer) < 5) await draw('dealer');
+        if(getScore(hands.dealer) < 5) await animatedDraw('dealer');
         revealHand('dealer');
         calculateWinner();
     }
@@ -251,21 +314,20 @@
         const myS = (myScore >= 8 && hands.p1.length === 2);
         const dS = (dScore >= 8 && hands.dealer.length === 2);
 
+        let res = "";
         if((myS && !dS) || (myScore > dScore && !dS)) {
-            balance += bet;
-            document.getElementById('r1').innerText = "နိုင်ပါပြီ! +"+bet;
+            balance += bet; res = "နိုင်ပါပြီ! +"+bet;
         } else if (myScore === dScore && myS === dS) {
-            document.getElementById('r1').innerText = "ပွင့်ကစား!";
+            res = "ပွင့်ကစား!";
         } else {
-            balance -= bet;
-            document.getElementById('r1').innerText = "ရှုံးပါပြီ! -"+bet;
+            balance -= bet; res = "ရှုံးပါပြီ! -"+bet;
         }
 
         saveGame();
         document.getElementById('b1').innerText = balance.toLocaleString() + " K";
-        const btn = document.getElementById('dealBtn');
-        btn.innerText = "နောက်တစ်ပွဲ";
-        btn.style.display = 'block';
+        document.getElementById('r1').innerText = res;
+        document.getElementById('dealBtn').innerText = "နောက်တစ်ပွဲ";
+        document.getElementById('dealBtn').style.display = 'block';
     }
 
     function resetTable() {
@@ -278,10 +340,7 @@
     }
 
     // Initialize
-    window.onload = () => {
-        checkDailyBonus();
-        updateLobbyUI();
-    };
+    window.onload = () => { updateLobbyUI(); };
 </script>
 </body>
 </html>
