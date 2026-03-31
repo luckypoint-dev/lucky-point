@@ -3,65 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shan Koe Mee Master</title>
+    <title>Shan Koe Mee Master - Enhanced</title>
     <style>
-        :root { --gold: #ffd700; --felt: #134e32; --wood: #3d2610; }
-        body { background: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .game-container { position: relative; width: 360px; height: 640px; background: #1a1a1a; border: 6px solid var(--wood); border-radius: 35px; overflow: hidden; }
-        .table { position: absolute; top: 12%; left: 5%; width: 90%; height: 65%; background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%); border-radius: 150px; border: 2px solid rgba(255,215,0,0.1); z-index: 1; }
+        :root { 
+            --gold: #ffd700; 
+            --felt: #134e32; 
+            --wood: #3d2610; 
+            --red: #e63946;
+            --dark-bg: #1a1a1a;
+        }
         
-        /* Overlays */
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .input-box { background: #222; border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 10px; margin: 10px 0; width: 70%; }
-        
-        /* Seats */
-        .seat { position: absolute; text-align: center; width: 80px; z-index: 10; }
-        .p1 { bottom: 120px; left: 140px; transform: scale(1.1); } 
-        .p2 { left: 10px; top: 250px; } .p3 { left: 40px; top: 80px; } .p4 { right: 40px; top: 80px; } .p5 { right: 10px; top: 250px; }
-        
-        /* Cards */
-        .card { width: 32px; height: 48px; background: white; color: black; border-radius: 4px; display: inline-block; margin: 1px; font-weight: bold; font-size: 12px; line-height: 48px; text-align: center; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-        .red { color: #d00; }
-        .score-tag { font-size: 11px; color: var(--gold); min-height: 15px; margin-top: 2px; font-weight: bold; }
+        body { 
+            background: #000; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+        }
 
-        /* Controls */
-        .controls { position: absolute; bottom: 15px; width: 100%; text-align: center; z-index: 100; }
-        .bet-btn { background: #333; color: #fff; border: 1px solid var(--gold); padding: 6px 10px; border-radius: 8px; cursor: pointer; margin: 2px; font-size: 11px; }
-        .bet-btn.active { background: var(--gold); color: #000; }
-        .deal-btn { background: #e63946; color: white; padding: 12px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; width: 80%; box-shadow: 0 4px #900; }
+        .game-container { 
+            position: relative; 
+            width: 360px; 
+            height: 640px; 
+            background: var(--dark-bg); 
+            border: 8px solid var(--wood); 
+            border-radius: 40px; 
+            overflow: hidden; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .table { 
+            position: absolute; 
+            top: 15%; 
+            left: 5%; 
+            width: 90%; 
+            height: 60%; 
+            background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%); 
+            border-radius: 150px; 
+            border: 3px solid rgba(255,215,0,0.2); 
+            z-index: 1; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
         
-        /* HUD */
-        .hud { position: absolute; top: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 100; font-size: 13px; color: var(--gold); }
+        .overlay { 
+            position: absolute; 
+            inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            transition: opacity 0.3s;
+        }
+
+        .input-box { 
+            background: #333; 
+            border: 2px solid var(--gold); 
+            color: white; 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+            width: 75%; 
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .seat { 
+            position: absolute; 
+            text-align: center; 
+            width: 90px; 
+            z-index: 10; 
+        }
+        .p1 { bottom: 130px; left: 135px; transform: scale(1.1); } 
+        .p2 { left: 15px; top: 260px; } 
+        .p3 { left: 45px; top: 90px; } 
+        .p4 { right: 45px; top: 90px; } 
+        .p5 { right: 15px; top: 260px; }
+        
+        .avatar-circle {
+            width: 50px;
+            height: 50px;
+            background: #222;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 5px;
+        }
+
+        .card-area {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            min-height: 60px;
+        }
+        .card { 
+            width: 38px; 
+            height: 56px; 
+            background: white; 
+            color: black; 
+            border-radius: 5px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold; 
+            font-size: 14px; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            animation: dealIn 0.3s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes dealIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .red { color: #d00; }
+        .score-tag { 
+            font-size: 12px; 
+            color: var(--gold); 
+            min-height: 18px; 
+            margin-top: 4px; 
+            font-weight: bold; 
+        }
+        .win-text { color: #0f0; }
+        .lose-text { color: #f44; }
+
+        .controls { 
+            position: absolute; 
+            bottom: 20px; 
+            width: 100%; 
+            text-align: center; 
+            z-index: 100; 
+        }
+        .bet-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .bet-btn { 
+            background: #333; 
+            color: #fff; 
+            border: 2px solid var(--gold); 
+            padding: 8px 15px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 14px; 
+        }
+        .bet-btn.active { 
+            background: var(--gold); 
+            color: #000; 
+        }
+        .deal-btn { 
+            background: var(--red); 
+            color: white; 
+            padding: 15px; 
+            border-radius: 35px; 
+            border: none; 
+            font-weight: bold; 
+            font-size: 18px;
+            cursor: pointer; 
+            width: 85%; 
+            box-shadow: 0 6px #900; 
+        }
+        
+        .hud { 
+            position: absolute; 
+            top: 20px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-around; 
+            z-index: 100; 
+            font-size: 15px; 
+            color: var(--gold); 
+        }
+
+        .avatar-selection {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .avatar-option {
+            font-size: 35px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .avatar-option.selected {
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="game-container">
     <div id="setup-ui" class="overlay">
-        <h2 style="color:var(--gold)">SHAN KOE MEE</h2>
+        <h1 style="color:var(--gold);">SHAN KOE MEE</h1>
         <input type="text" id="uname-in" class="input-box" placeholder="နာမည်ရိုက်ပါ" maxlength="10">
-        <div style="margin:10px;">
-            <span style="font-size:30px; cursor:pointer;" onclick="selAva('😎')">😎</span>
-            <span style="font-size:30px; cursor:pointer;" onclick="selAva('🐱')">🐱</span>
-            <span style="font-size:30px; cursor:pointer;" onclick="selAva('🦊')">🦊</span>
+        <div class="avatar-selection">
+            <span class="avatar-option selected" onclick="selAva('😎', this)">😎</span>
+            <span class="avatar-option" onclick="selAva('🐱', this)">🐱</span>
+            <span class="avatar-option" onclick="selAva('🦊', this)">🦊</span>
         </div>
         <button class="deal-btn" onclick="saveProfile()">ဂိမ်းစမည်</button>
     </div>
 
     <div class="hud">
-        <span><span id="display-name">YOU</span>: <span id="bal-text" style="color:#0f0">0</span> K</span>
+        <span>👤 <span id="display-name">YOU</span></span>
+        <span>💰 <span id="bal-text" style="color:#0f0">0</span> K</span>
     </div>
 
     <div class="table"></div>
 
-    <div class="seat p1"><div id="c1"></div><div id="s1" class="score-tag"></div><div id="display-ava" style="font-size:25px">👤</div></div>
-    <div class="seat p2">🤖<div id="c2"></div><div id="s2" class="score-tag"></div></div>
-    <div class="seat p3">🤖<div id="c3"></div><div id="s3" class="score-tag"></div></div>
-    <div class="seat p4">🤖<div id="c4"></div><div id="s4" class="score-tag"></div></div>
-    <div class="seat p5">🤖<div id="c5"></div><div id="s5" class="score-tag"></div></div>
+    <div class="seat p1">
+        <div id="c1" class="card-area"></div>
+        <div id="s1" class="score-tag"></div>
+        <div class="avatar-circle" id="display-ava">👤</div>
+    </div>
+    <div class="seat p2"><div class="avatar-circle">🤖</div><div id="c2" class="card-area"></div><div id="s2" class="score-tag"></div></div>
+    <div class="seat p3"><div class="avatar-circle">🤖</div><div id="c3" class="card-area"></div><div id="s3" class="score-tag"></div></div>
+    <div class="seat p4"><div class="avatar-circle">🤖</div><div id="c4" class="card-area"></div><div id="s4" class="score-tag"></div></div>
+    <div class="seat p5"><div class="avatar-circle">🤖</div><div id="c5" class="card-area"></div><div id="s5" class="score-tag"></div></div>
 
     <div class="controls">
-        <div id="bet-area">
+        <div class="bet-area">
             <button class="bet-btn active" onclick="setBet(100, this)">100</button>
             <button class="bet-btn" onclick="setBet(500, this)">500</button>
             <button class="bet-btn" onclick="setBet(1000, this)">1000</button>
@@ -71,28 +244,20 @@
 </div>
 
 <script>
-    let bal = parseInt(localStorage.getItem('skm_master_bal')) || 5000;
-    let uName = localStorage.getItem('skm_master_name') || "";
-    let uAva = localStorage.getItem('skm_master_ava') || "😎";
+    let bal = 5000;
+    let uName = "";
+    let uAva = "😎";
     let curBet = 100;
     let isBusy = false;
 
-    // Sound (Simple Beep)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(f, d) {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.frequency.value = f; g.gain.value = 0.1;
-        osc.start(); osc.stop(audioCtx.currentTime + d);
+    function selAva(a, btn) { 
+        uAva = a; 
+        document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+        btn.classList.add('selected');
     }
 
-    function selAva(a) { uAva = a; playSound(600, 0.1); }
-
     function saveProfile() {
-        uName = document.getElementById('uname-in').value || "Player";
-        localStorage.setItem('skm_master_name', uName);
-        localStorage.setItem('skm_master_ava', uAva);
+        uName = document.getElementById('uname-in').value.trim() || "Player";
         document.getElementById('setup-ui').style.display = 'none';
         initUI();
     }
@@ -101,7 +266,6 @@
         document.getElementById('display-name').innerText = uName;
         document.getElementById('display-ava').innerText = uAva;
         document.getElementById('bal-text').innerText = bal.toLocaleString();
-        localStorage.setItem('skm_master_bal', bal);
     }
 
     function setBet(a, btn) {
@@ -109,72 +273,71 @@
         curBet = a;
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        playSound(400, 0.05);
     }
 
-    function dealCards() {
+    async function dealCards() {
         if(isBusy) return;
         if(bal < curBet) { alert("ငွေမလောက်ပါ!"); return; }
 
         isBusy = true;
-        document.getElementById('mainBtn').innerText = "ဝေနေသည်...";
-        document.getElementById('mainBtn').style.opacity = "0.5";
+        const mainBtn = document.getElementById('mainBtn');
+        mainBtn.innerText = "ဝေနေသည်...";
         
-        // Clear Table
         for(let i=1; i<=5; i++) {
             document.getElementById('c'+i).innerHTML = "";
-            document.getElementById('s'+i).innerText = "";
+            document.getElementById('s'+i).innerHTML = "";
         }
 
         const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
         const suits = ['♠','♥','♦','♣'];
         
-        // Logic & Animation Delay
-        setTimeout(() => {
-            let myScore = 0;
-            let dealerScore = Math.floor(Math.random() * 10);
+        let scores = [];
+        for(let p=1; p<=5; p++) {
+            let c1 = {r: ranks[Math.floor(Math.random()*13)], s: suits[Math.floor(Math.random()*4)]};
+            let c2 = {r: ranks[Math.floor(Math.random()*13)], s: suits[Math.floor(Math.random()*4)]};
+            
+            let score = (getVal(c1.r) + getVal(c2.r)) % 10;
+            scores.push(score);
 
-            for(let p=1; p<=5; p++) {
-                let card1 = {r: ranks[Math.floor(Math.random()*13)], s: suits[Math.floor(Math.random()*4)]};
-                let card2 = {r: ranks[Math.floor(Math.random()*13)], s: suits[Math.floor(Math.random()*4)]};
-                
-                let h = [card1, card2];
-                let score = h.reduce((s, c) => s + (['10','J','Q','K'].includes(c.r)?0:(c.r=='A'?1:parseInt(c.r))), 0) % 10;
-                
-                if(p === 1) myScore = score;
+            renderCard(p, c1);
+            await new Promise(r => setTimeout(r, 100));
+            renderCard(p, c2);
+            await new Promise(r => setTimeout(r, 100));
+            
+            document.getElementById('s'+p).innerText = (score >= 8 ? "ရှမ်း " : "") + score + " မှတ်";
+        }
 
-                // Render
-                document.getElementById('c'+p).innerHTML = h.map(c => `<div class="card ${c.s=='♥'||c.s=='♦'?'red':''}">${c.r}${c.s}</div>`).join('');
-                document.getElementById('s'+p).innerText = (score >= 8 ? "ရှမ်း " : "") + score + " မှတ်";
-                playSound(800, 0.05);
-            }
+        let myScore = scores[0];
+        let dealerScore = scores[4];
 
-            // Calc Result
-            if(myScore > dealerScore) {
-                bal += curBet;
-                document.getElementById('s1').innerText += " (နိုင်!)";
-                playSound(1000, 0.2);
-            } else if(myScore < dealerScore) {
-                bal -= curBet;
-                document.getElementById('s1').innerText += " (ရှုံး)";
-                playSound(200, 0.3);
-            } else {
-                document.getElementById('s1').innerText += " (ပွင့်)";
-            }
+        if(myScore > dealerScore) {
+            bal += curBet;
+            document.getElementById('s1').innerHTML += " <span class='win-text'>(နိုင်!)</span>";
+        } else if(myScore < dealerScore) {
+            bal -= curBet;
+            document.getElementById('s1').innerHTML += " <span class='lose-text'>(ရှုံး)</span>";
+        } else {
+            document.getElementById('s1').innerText += " (ပွင့်)";
+        }
 
-            initUI();
-            isBusy = false;
-            document.getElementById('mainBtn').innerText = "နောက်တစ်ပွဲ";
-            document.getElementById('mainBtn').style.opacity = "1";
-        }, 1000);
+        initUI();
+        isBusy = false;
+        mainBtn.innerText = "နောက်တစ်ပွဲ";
     }
 
-    window.onload = () => {
-        if(uName) {
-            document.getElementById('setup-ui').style.display = 'none';
-            initUI();
-        }
-    };
+    function getVal(r) {
+        if(['10','J','Q','K'].includes(r)) return 0;
+        if(r === 'A') return 1;
+        return parseInt(r);
+    }
+
+    function renderCard(p, card) {
+        const container = document.getElementById('c'+p);
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${card.s=='♥'||card.s=='♦'?'red':''}`;
+        cardDiv.innerHTML = `<span>${card.r}</span><span>${card.s}</span>`;
+        container.appendChild(cardDiv);
+    }
 </script>
 </body>
 </html>
