@@ -3,182 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shan Koe Mee - Ultimate Master</title>
+    <title>Shan Koe Mee Pro</title>
     <style>
         :root { --gold: #ffd700; --wood: #3d2610; --felt: #134e32; --card-w: 32px; --card-h: 48px; }
         body { background: #000; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; overflow: hidden; }
         
         .game-container { position: relative; width: 380px; height: 680px; background: #1a1a1a; border: 8px solid var(--wood); border-radius: 45px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
-        .table-surface { position: absolute; top: 10%; left: 5%; width: 90%; height: 75%; background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%); border-radius: 150px; border: 3px solid rgba(255,215,0,0.1); z-index: 1; }
+        .table-surface { position: absolute; top: 12%; left: 5%; width: 90%; height: 70%; background: radial-gradient(circle, var(--felt) 0%, #051a0e 100%); border-radius: 150px; border: 3px solid rgba(255,215,0,0.1); z-index: 1; }
 
-        /* Lobby */
-        #lobby { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .room-card { background: linear-gradient(145deg, #222, #111); border: 1px solid var(--gold); border-radius: 15px; width: 80%; padding: 18px; margin: 10px; text-align: center; cursor: pointer; }
-
-        /* Card 3D Flip */
-        .card-container { width: var(--card-w); height: var(--card-h); perspective: 600px; margin: 0 -5px; opacity: 0; transition: transform 0.4s ease-out; position: absolute; }
-        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-        .card-container.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-        .card-back { background: linear-gradient(135deg, #7a0000, #b30000); border: 1px solid var(--gold); transform: rotateY(0deg); }
-        .card-front { background: white; color: black; transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+        /* Popups & Menus */
+        .overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .input-box { background: #222; border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 10px; margin: 10px 0; width: 70%; }
         
+        #leaderboard-ui { position: absolute; top: 15%; left: 10%; width: 80%; height: 60%; background: rgba(0,0,0,0.95); border: 2px solid var(--gold); border-radius: 20px; z-index: 1500; display: none; padding: 15px; }
+        .lb-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #333; font-size: 14px; }
+
+        /* Game Elements */
+        .seat { position: absolute; text-align: center; width: 85px; z-index: 10; }
+        .p1 { bottom: 15px; left: 147.5px; transform: scale(1.1); } 
+        .p2 { left: 10px; top: 320px; } .p3 { left: 45px; top: 110px; } .p4 { right: 45px; top: 110px; } .p5 { right: 10px; top: 320px; } 
+
+        .cards-area { display: flex; justify-content: center; min-height: 52px; position: relative; margin-top: 5px; }
+        .card-container { width: var(--card-w); height: var(--card-h); perspective: 600px; margin: 0 -6px; opacity: 0; position: absolute; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; }
+        .card-back { background: #b30000; border: 1px solid var(--gold); }
+        .card-front { background: white; color: black; transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid #ddd; }
         .card-container.dealt { position: relative; opacity: 1; transform: translate(0,0) !important; }
 
-        /* UI Elements */
-        .seat { position: absolute; text-align: center; width: 85px; z-index: 10; }
-        .p1 { bottom: 15px; left: 147.5px; transform: scale(1.2); } 
-        .p2 { left: 10px; top: 320px; } .p3 { left: 50px; top: 100px; } .p4 { right: 50px; top: 100px; } .p5 { right: 10px; top: 320px; } 
-
+        .btn-main { background: #e63946; color: white; padding: 12px 30px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; }
         .controls { position: absolute; bottom: 160px; width: 100%; text-align: center; display: none; z-index: 100; }
-        .btn { padding: 10px 18px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin: 0 5px; }
-        .btn-hit { background: var(--gold); } .btn-stay { background: #eee; }
-        .btn-main { position: absolute; bottom: 170px; left: 50%; transform: translateX(-50%); background: #e63946; color: white; padding: 12px 35px; border-radius: 30px; border: none; font-weight: bold; z-index: 99; }
-
-        /* Coins Animation */
-        .coin { position: absolute; width: 15px; height: 15px; background: gold; border-radius: 50%; border: 1px solid #b8860b; z-index: 200; pointer-events: none; }
-
-        /* Reaction Bar */
-        .reaction-bar { position: absolute; right: 10px; bottom: 200px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
-        .react-btn { background: rgba(0,0,0,0.5); border: none; font-size: 20px; cursor: pointer; border-radius: 50%; padding: 5px; }
+        
+        .bet-slider-container { position: absolute; bottom: 110px; width: 100%; text-align: center; z-index: 100; display: none; }
+        input[type=range] { width: 60%; accent-color: var(--gold); }
     </style>
 </head>
 <body>
 
 <div class="game-container" id="game-box">
+    <div id="profile-setup" class="overlay">
+        <h2 style="color:var(--gold)">Player Profile</h2>
+        <p>သင့်နာမည် ရိုက်ထည့်ပါ</p>
+        <input type="text" id="username-input" class="input-box" placeholder="Name..." maxlength="10">
+        <div style="margin: 15px 0;">
+            <span style="cursor:pointer; font-size:30px; margin:5px;" onclick="setAva('😎')">😎</span>
+            <span style="cursor:pointer; font-size:30px; margin:5px;" onclick="setAva('🐱')">🐱</span>
+            <span style="cursor:pointer; font-size:30px; margin:5px;" onclick="setAva('🐶')">🐶</span>
+        </div>
+        <button class="btn-main" onclick="saveProfile()">ဂိမ်းစမည်</button>
+    </div>
+
     <div class="table-surface"></div>
-    <div id="lobby">
-        <h2 style="color: var(--gold);">Lucky Shan Koe Mee</h2>
-        <p>လက်ကျန်ငွေ: <span id="l-bal" style="color:#0f0">0</span> K</p>
-        <div class="room-card" onclick="join(100, 500)">Starter (၁၀၀ စား)</div>
-        <div class="room-card" onclick="join(1000, 5000)">VIP (၁,၀၀၀ စား)</div>
+
+    <div id="leaderboard-ui">
+        <h3 style="color:var(--gold); text-align:center;">🏆 Leaderboard</h3>
+        <div id="lb-content"></div>
+        <button class="btn-main" style="margin-top:20px; width:100%" onclick="closeLB()">CLOSE</button>
     </div>
 
-    <div class="reaction-bar">
-        <button class="react-btn" onclick="react('😂')">😂</button>
-        <button class="react-btn" onclick="react('😠')">😠</button>
-        <button class="react-btn" onclick="react('😎')">😎</button>
+    <button onclick="toggleLB()" style="position:absolute; top:15px; right:15px; z-index:100; background:rgba(0,0,0,0.5); color:white; border:1px solid #666; padding:5px; border-radius:5px; font-size:10px;">RANKING</button>
+
+    <div class="seat p1">
+        <div id="my-ava" style="font-size:30px">👤</div>
+        <div class="cards-area" id="c1"></div>
+        <div id="r1" style="font-size:11px; color:var(--gold); min-height:15px;"></div>
+        <div style="color:#0f0; font-size:11px" id="b1">0</div>
+        <div id="my-name" style="font-size:10px">YOU</div>
     </div>
 
-    <div class="seat p1"><div style="font-size:30px">😎</div><div class="cards-area" id="c1"></div><div id="r1" style="font-size:11px; color:var(--gold)"></div><div style="color:#0f0; font-size:11px" id="b1">0</div></div>
-    <div class="seat p2"><div style="font-size:25px">👩</div><div class="cards-area" id="c2"></div><div id="r2"></div></div>
-    <div class="seat p3"><div style="font-size:25px">👨</div><div class="cards-area" id="c3"></div><div id="r3"></div></div>
-    <div class="seat p4"><div style="font-size:25px">🧑</div><div class="cards-area" id="c4"></div><div id="r4"></div></div>
-    <div class="seat p5"><div style="font-size:25px">👧</div><div class="cards-area" id="c5"></div><div id="r5"></div></div>
+    <div class="seat p2"><div style="font-size:25px">🤖</div><div class="cards-area" id="c2"></div><div id="r2" style="font-size:10px"></div><div class="bot-bal" id="bal2">5000</div></div>
+    <div class="seat p3"><div style="font-size:25px">🤖</div><div class="cards-area" id="c3"></div><div id="r3" style="font-size:10px"></div><div class="bot-bal" id="bal3">7000</div></div>
+    <div class="seat p4"><div style="font-size:25px">🤖</div><div class="cards-area" id="c4"></div><div id="r4" style="font-size:10px"></div><div class="bot-bal" id="bal4">10000</div></div>
+    <div class="seat p5"><div style="font-size:25px">🤖</div><div class="cards-area" id="c5"></div><div id="r5" style="font-size:10px"></div><div class="bot-bal" id="bal5">3500</div></div>
+
+    <div class="bet-slider-container" id="bet-ui">
+        <span id="bet-val" style="color:var(--gold)">Bet: 100</span><br>
+        <input type="range" id="bet-range" min="100" max="1000" step="100" oninput="updateBetText(this.value)">
+    </div>
 
     <div id="ctrl" class="controls">
-        <button class="btn btn-stay" onclick="stay()">နားမည်</button>
-        <button class="btn btn-hit" onclick="hit()">ထပ်ဆွဲ</button>
+        <button class="btn-main" style="background:#444;" onclick="stay()">နားမည်</button>
+        <button class="btn-main" onclick="hit()">ထပ်ဆွဲ</button>
     </div>
-    <button class="btn-main" id="dBtn" onclick="play()">ဖဲဝေမည်</button>
+    
+    <button class="btn-main" id="dBtn" style="position:absolute; bottom:170px; left:50%; transform:translateX(-50%);" onclick="play()">ဖဲဝေမည်</button>
 </div>
 
 <script>
-    let bal = parseInt(localStorage.getItem('skm_bal')) || 10000;
-    let bet = 100, hands = {};
-    const suits = [{s:'♠', c:'black'}, {s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}];
-    const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    let bal = parseInt(localStorage.getItem('skm_bal')) || 5000;
+    let userName = localStorage.getItem('skm_name') || "";
+    let userAva = localStorage.getItem('skm_ava') || "😎";
+    let bet = 100, hands = {}, deck = [];
+    
+    // Bot Balances
+    let botBals = [5000, 7500, 12000, 4300];
 
-    function updateUI() {
-        document.getElementById('l-bal').innerText = bal.toLocaleString();
+    function setAva(a) { userAva = a; }
+    function saveProfile() {
+        userName = document.getElementById('username-input').value || "Player";
+        localStorage.setItem('skm_name', userName);
+        localStorage.setItem('skm_ava', userAva);
+        document.getElementById('profile-setup').style.display = 'none';
+        initUI();
+    }
+
+    function initUI() {
+        document.getElementById('my-name').innerText = userName;
+        document.getElementById('my-ava').innerText = userAva;
         document.getElementById('b1').innerText = bal.toLocaleString() + " K";
+        document.getElementById('bet-ui').style.display = 'block';
     }
 
-    function join(b, min) {
-        if(bal < min) return alert("ငွေမလောက်ပါ!");
-        bet = b; document.getElementById('lobby').style.display = 'none'; updateUI();
-    }
+    function updateBetText(v) { bet = parseInt(v); document.getElementById('bet-val').innerText = "Bet: " + bet; }
 
     function getScore(h) { return h.reduce((s, c) => s + (['10','J','Q','K'].includes(c.r) ? 0 : (c.r==='A'?1:parseInt(c.r))), 0) % 10; }
 
     async function play() {
-        if(bal < bet) return alert("ငွေမလောက်ပါ!");
+        if(bal < bet) return alert("ပိုက်ဆံမလောက်ပါ!");
         document.getElementById('dBtn').style.display = 'none';
+        document.getElementById('bet-ui').style.display = 'none';
         resetTable();
-        let deck = []; suits.forEach(s => ranks.forEach(r => deck.push({r, ...s})));
+
+        deck = []; const suits = [{s:'♠', c:'black'}, {s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}];
+        const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        suits.forEach(s => ranks.forEach(r => deck.push({r, ...s})));
         deck.sort(() => Math.random() - 0.5);
 
         for(let i=0; i<2; i++) {
-            for(let p=1; p<=5; p++) await draw('p'+p, deck);
+            for(let p=1; p<=5; p++) await draw('p'+p);
         }
         
         await reveal('p1');
-        const s1 = getScore(hands.p1);
-        if(s1 >= 8) setTimeout(finish, 800);
+        if(getScore(hands.p1) >= 8) setTimeout(finish, 800);
         else document.getElementById('ctrl').style.display = 'block';
     }
 
-    async function draw(pid, deck) {
+    async function draw(pid) {
         if(!hands[pid]) hands[pid] = [];
         const card = deck.pop(); hands[pid].push(card);
         const area = document.getElementById('c' + pid.charAt(1));
-        const cContainer = document.createElement('div');
-        cContainer.className = 'card-container';
-        cContainer.innerHTML = `<div class="card-inner"><div class="card-back"></div><div class="card-front ${card.c}"><span>${card.r}</span><span>${card.s}</span></div></div>`;
-        area.appendChild(cContainer);
-        await new Promise(r => setTimeout(() => { cContainer.classList.add('dealt'); r(); }, 100));
+        const c = document.createElement('div');
+        c.className = 'card-container';
+        c.innerHTML = `<div class="card-inner"><div class="card-back"></div><div class="card-front ${card.c}"><span>${card.r}</span><span>${card.s}</span></div></div>`;
+        area.appendChild(c);
+        await new Promise(r => setTimeout(() => { c.classList.add('dealt'); r(); }, 120));
     }
 
     async function reveal(pid) {
-        const containers = document.querySelectorAll(`#c${pid.charAt(1)} .card-container`);
-        for(let c of containers) {
-            c.classList.add('flipped');
-            await new Promise(r => setTimeout(r, 100));
-        }
+        const cs = document.querySelectorAll(`#c${pid.charAt(1)} .card-container`);
+        for(let c of cs) { c.classList.add('flipped'); await new Promise(r => setTimeout(r, 100)); }
         const s = getScore(hands[pid]);
         document.getElementById('r'+pid.charAt(1)).innerText = (s>=8 && hands[pid].length===2 ? "ရှမ်း " : "") + s + " မှတ်";
     }
 
-    async function hit() {
-        document.getElementById('ctrl').style.display = 'none';
-        // Logic for hit... simplified for full script
-        finish();
-    }
-
+    function hit() { document.getElementById('ctrl').style.display = 'none'; draw('p1').then(() => { reveal('p1'); finish(); }); }
     function stay() { document.getElementById('ctrl').style.display = 'none'; finish(); }
 
     async function finish() {
         for(let p=2; p<=5; p++) await reveal('p'+p);
-        let myS = getScore(hands.p1);
-        let win = Math.random() > 0.5; // Demo logic
-        if(win) {
-            bal += bet; spawnCoins();
-            document.getElementById('r1').innerText = "နိုင်ပါပြီ! 🎉";
-        } else {
-            bal -= bet;
-            document.getElementById('r1').innerText = "ရှုံးပါပြီ! 💸";
-        }
-        localStorage.setItem('skm_bal', bal); updateUI();
-        document.getElementById('dBtn').innerText = "နောက်တစ်ပွဲ";
+        let s1 = getScore(hands.p1);
+        let win = s1 > 5; // Simplified win logic for demo
+        if(win) { bal += bet; document.getElementById('r1').innerText = "နိုင်ပြီ! +"+bet; }
+        else { bal -= bet; document.getElementById('r1').innerText = "ရှုံးပြီ! -"+bet; }
+        
+        // Update Bot random bals
+        botBals = botBals.map(b => b + (Math.random() > 0.5 ? 200 : -200));
+        
+        localStorage.setItem('skm_bal', bal);
+        initUI();
         document.getElementById('dBtn').style.display = 'block';
+        document.getElementById('bet-ui').style.display = 'block';
     }
 
-    function spawnCoins() {
-        for(let i=0; i<15; i++) {
-            const coin = document.createElement('div');
-            coin.className = 'coin';
-            coin.style.left = '180px'; coin.style.top = '250px';
-            document.getElementById('game-box').appendChild(coin);
-            const tx = (Math.random()-0.5)*200; const ty = 200 + Math.random()*100;
-            coin.animate([{transform: 'translate(0,0)'}, {transform: `translate(${tx}px, ${ty}px)`, opacity: 0}], {duration: 800, easing: 'ease-out'});
-            setTimeout(() => coin.remove(), 800);
-        }
+    function toggleLB() {
+        const data = [{n: userName, b: bal}, {n: "Bot King", b: botBals[2]}, {n: "Lucky Bot", b: botBals[1]}, {n: "Pro Player", b: botBals[0]}, {n: "Noob Bot", b: botBals[3]}];
+        data.sort((a,b) => b.b - a.b);
+        document.getElementById('lb-content').innerHTML = data.map((d, i) => `<div class="lb-row"><span>${i+1}. ${d.n}</span><span>${d.b.toLocaleString()} K</span></div>`).join('');
+        document.getElementById('leaderboard-ui').style.display = 'block';
     }
-
-    function react(emoji) {
-        const bubble = document.createElement('div');
-        bubble.innerText = emoji; bubble.style.position = 'absolute';
-        bubble.style.bottom = '100px'; bubble.style.left = '180px'; bubble.style.fontSize = '30px';
-        document.getElementById('game-box').appendChild(bubble);
-        bubble.animate([{transform: 'translateY(0)', opacity: 1}, {transform: 'translateY(-100px)', opacity: 0}], 1000);
-        setTimeout(() => bubble.remove(), 1000);
-    }
+    function closeLB() { document.getElementById('leaderboard-ui').style.display = 'none'; }
 
     function resetTable() {
         ['1','2','3','4','5'].forEach(i => { document.getElementById('c'+i).innerHTML = ""; document.getElementById('r'+i).innerText = ""; });
         hands = {};
     }
-    updateUI();
+
+    window.onload = () => { if(userName) { document.getElementById('profile-setup').style.display = 'none'; initUI(); } };
 </script>
 </body>
 </html>
