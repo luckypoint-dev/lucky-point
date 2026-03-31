@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shan Koe Mee - Ultimate Casino</title>
+    <title>Shan Koe Mee - Grand Casino Master</title>
     <style>
         :root {
             --gold: #ffd700; --felt: #076324; --wood: #4d2d18; --red: #d63031;
@@ -12,10 +12,14 @@
         body { background: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
         .game-container { position: relative; width: 360px; height: 640px; background: #1a1a1a; border: 10px solid var(--wood); border-radius: 45px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
         
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; background: rgba(0,0,0,0.95); text-align: center; }
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; background: rgba(0,0,0,0.95); text-align: center; padding: 20px; }
         .screen.active { display: flex; }
-        .btn-main { background: var(--gold); color: #000; padding: 15px 40px; border-radius: 30px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; box-shadow: 0 5px #b8860b; }
-        
+        .room-card { width: 90%; background: #2d3436; border: 2px solid var(--gold); border-radius: 15px; padding: 15px; margin: 10px 0; cursor: pointer; transition: transform 0.2s; }
+        .room-card:hover { transform: scale(1.05); }
+        .room-card.locked { opacity: 0.5; border-color: #666; cursor: not-allowed; }
+        .room-title { color: var(--gold); font-weight: bold; font-size: 18px; }
+        .room-info { font-size: 12px; color: #aaa; margin-top: 5px; }
+
         .table { position: absolute; top: 15%; left: 5%; width: 90%; height: 60%; background: radial-gradient(circle, var(--felt) 0%, #043917 100%); border-radius: 150px; border: 4px solid rgba(255,215,0,0.3); z-index: 1; }
         
         .seat { position: absolute; text-align: center; width: 80px; z-index: 10; transition: all 0.3s; }
@@ -54,14 +58,26 @@
 <body>
 
 <div class="game-container">
-    <div id="start-screen" class="screen active">
-        <h1 style="color:var(--gold); margin-bottom: 0;">SHAN KOE MEE</h1>
-        <p style="color: #aaa; font-size: 14px;">Ultimate Casino Edition</p>
-        <div id="daily-bonus-area" style="margin-top: 20px; color: #0f0; font-weight: bold;"></div>
-        <button class="btn-main" onclick="initGame()">PLAY NOW</button>
+    <div id="lobby-screen" class="screen active">
+        <h1 style="color:var(--gold); margin-bottom: 10px;">GRAND CASINO</h1>
+        <div id="daily-bonus-area" style="color: #0f0; font-weight: bold; margin-bottom: 10px;"></div>
+        
+        <div class="room-card" onclick="joinRoom(100, 500)">
+            <div class="room-title">Beginner Room</div>
+            <div class="room-info">Min Bet: 100 K | Min Bal: 500 K</div>
+        </div>
+        <div class="room-card" id="room-pro" onclick="joinRoom(500, 2000)">
+            <div class="room-title">Pro Room</div>
+            <div class="room-info">Min Bet: 500 K | Min Bal: 2,000 K</div>
+        </div>
+        <div class="room-card" id="room-vip" onclick="joinRoom(1000, 5000)">
+            <div class="room-title">VIP Room</div>
+            <div class="room-info">Min Bet: 1,000 K | Min Bal: 5,000 K</div>
+        </div>
     </div>
 
     <div class="hud">
+        <span onclick="exitToLobby()" style="cursor:pointer">🚪 Exit</span>
         <span>⭐ LVL <span id="lvl-text">1</span></span>
         <span>💰 <span id="bal-text">5,000</span> K</span>
     </div>
@@ -89,7 +105,7 @@
 
     <div class="controls">
         <div id="bet-controls">
-            <div class="chip-area">
+            <div class="chip-area" id="chip-area">
                 <div class="chip c100 selected" onclick="selectChip(100, this)">100</div>
                 <div class="chip c500" onclick="selectChip(500, this)">500</div>
                 <div class="chip c1000" onclick="selectChip(1000, this)">1K</div>
@@ -107,14 +123,23 @@
     let balance = parseInt(localStorage.getItem('skm_bal')) || 5000;
     let exp = parseInt(localStorage.getItem('skm_exp')) || 0;
     let currentBet = 100;
+    let minRoomBet = 100;
     let deck = [];
     let hands = { player: [], dealer: [], p1: [], p2: [], p3: [], p4: [] };
     let isGameOver = false;
 
-    function initGame() {
-        checkDailyBonus();
-        document.getElementById('start-screen').classList.remove('active');
-        updateUI();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(f, d, type = 'sine') {
+        try {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = type;
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+            osc.start(); osc.stop(audioCtx.currentTime + d);
+        } catch(e) {}
     }
 
     function checkDailyBonus() {
@@ -128,6 +153,23 @@
         }
     }
 
+    function joinRoom(minBet, minBal) {
+        if (balance < minBal) {
+            alert(`ဤအခန်းသို့ဝင်ရန် အနည်းဆုံး ${minBal.toLocaleString()} K ရှိရပါမည်!`);
+            return;
+        }
+        minRoomBet = minBet;
+        currentBet = minBet;
+        document.getElementById('lobby-screen').classList.remove('active');
+        updateUI();
+        playSound(600, 0.2);
+    }
+
+    function exitToLobby() {
+        document.getElementById('lobby-screen').classList.add('active');
+        playSound(400, 0.2);
+    }
+
     function updateUI() {
         document.getElementById('bal-text').innerText = balance.toLocaleString();
         let lvl = Math.floor(exp / 1000) + 1;
@@ -136,12 +178,17 @@
         document.getElementById('lvl-progress').style.width = progress + "%";
         localStorage.setItem('skm_bal', balance);
         localStorage.setItem('skm_exp', exp);
+        
+        document.getElementById('room-pro').className = balance < 2000 ? "room-card locked" : "room-card";
+        document.getElementById('room-vip').className = balance < 5000 ? "room-card locked" : "room-card";
     }
 
     function selectChip(val, el) {
+        if (val < minRoomBet) return;
         currentBet = val;
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
+        playSound(800, 0.05);
     }
 
     function createDeck() {
@@ -173,17 +220,20 @@
         updateUI();
         isGameOver = false;
         deck = createDeck();
+        
         Object.keys(hands).forEach(k => {
             hands[k] = [];
             document.getElementById('c-'+k).innerHTML = "";
             document.getElementById('s-'+k).style.visibility = "hidden";
         });
         document.getElementById('bet-controls').style.display = "none";
+        playSound(400, 0.1);
 
         for(let i=0; i<2; i++) {
             for(let k of ['player', 'p1', 'p2', 'p3', 'p4', 'dealer']) {
                 hands[k].push(deck.pop());
                 renderCard(k, hands[k][hands[k].length-1], k === 'dealer' && i === 1);
+                playSound(1000, 0.05);
                 await new Promise(r => setTimeout(r, 150));
             }
         }
@@ -220,6 +270,7 @@
     async function hitCard() {
         hands.player.push(deck.pop());
         renderCard('player', hands.player[hands.player.length-1]);
+        playSound(1000, 0.05);
         showScore('player', getScore(hands.player), getMultiplier(hands.player));
         document.getElementById('action-controls').style.display = "none";
         setTimeout(stayGame, 500);
@@ -235,6 +286,7 @@
             hands[k].forEach(c => renderCard(k, c));
             showScore(k, getScore(hands[k]), getMultiplier(hands[k]));
         });
+        playSound(1200, 0.1);
 
         let dScore = getScore(hands.dealer);
         if (dScore < 4) {
@@ -243,6 +295,7 @@
             document.getElementById('c-dealer').innerHTML = "";
             hands.dealer.forEach(c => renderCard('dealer', c));
             showScore('dealer', getScore(hands.dealer), getMultiplier(hands.dealer));
+            playSound(1000, 0.05);
         }
 
         setTimeout(() => {
@@ -255,17 +308,33 @@
                 balance += (currentBet + win);
                 exp += 50;
                 showEmoji('player', '💰');
+                playSound(1500, 0.3);
             } else if (pScore < dScore) {
                 exp += 10;
                 showEmoji('player', '😭');
+                playSound(200, 0.3, 'sawtooth');
             } else {
                 balance += currentBet;
                 showEmoji('player', '😐');
+                playSound(400, 0.2);
             }
             updateUI();
-            document.getElementById('bet-controls').style.display = "block";
+            
+            setTimeout(() => {
+                Object.keys(hands).forEach(k => {
+                    document.getElementById('c-'+k).innerHTML = "";
+                    document.getElementById('s-'+k).style.visibility = "hidden";
+                });
+                document.getElementById('bet-controls').style.display = "block";
+            }, 3000);
         }, 800);
     }
+
+    window.onload = () => {
+        checkDailyBonus();
+        updateUI();
+    };
 </script>
 </body>
-</html>
+    </html>
+    
