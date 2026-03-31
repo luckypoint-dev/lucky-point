@@ -3,133 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Point Shan Koe Mee Pro</title>
+    <title>Shan Koe Mee - Room System</title>
     <style>
-        :root {
-            --wood-color: #3d2610;
-            --table-green: radial-gradient(circle, #2d5a3f 0%, #0b2b18 100%);
-            --gold: #ffd700;
-        }
-
-        body { 
-            background-color: #1a1a1a; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            color: white; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            overflow: hidden; 
-        }
-
+        :root { --gold: #ffd700; --wood: #3d2610; }
+        body { background: #1a1a1a; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
+        
         .game-container { 
-            position: relative; 
-            width: 380px; 
-            height: 650px; 
-            background: var(--table-green); 
-            border: 10px solid var(--wood-color); 
-            border-radius: 50px; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.9); 
+            position: relative; width: 380px; height: 650px; 
+            background: radial-gradient(circle, #2d5a3f 0%, #0b2b18 100%); 
+            border: 10px solid var(--wood); border-radius: 50px; overflow: hidden; 
         }
 
-        /* Player Layout */
-        .player { position: absolute; text-align: center; width: 100px; transition: all 0.3s; }
-        .p1 { bottom: 30px; left: 140px; z-index: 100; transform: scale(1.1); } /* User */
-        .p2 { left: 15px; top: 250px; }
-        .p3 { left: 50px; top: 60px; }
-        .p4 { right: 50px; top: 60px; }
-        .p5 { right: 15px; top: 250px; }
-
-        .avatar { 
-            width: 50px; height: 50px; 
-            background: #333; 
-            border: 2px solid var(--gold); 
-            border-radius: 50%; 
-            margin: 0 auto 5px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
+        /* Lobby Styling */
+        #lobby {
+            position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        /* Cards Styling */
-        .cards-area { 
-            display: flex; 
-            justify-content: center; 
-            gap: -15px; /* Overlap cards */
-            height: 60px; 
-            margin-top: 5px;
+        .room-card {
+            background: #222; border: 2px solid var(--gold); border-radius: 15px;
+            width: 80%; padding: 15px; margin: 10px; text-align: center; cursor: pointer;
+            transition: 0.3s;
         }
+        .room-card:hover { background: #333; transform: scale(1.05); }
+        .room-locked { opacity: 0.5; cursor: not-allowed; border-color: #666; }
 
-        .card { 
-            width: 35px; height: 50px; 
-            background: white; 
-            color: black; 
-            border-radius: 4px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); 
-            opacity: 0; 
-            transform: translateY(-100px);
-            transition: transform 0.4s ease-out, opacity 0.3s;
-        }
-
-        .card.dealt { opacity: 1; transform: translateY(0); }
-        .card.red { color: #d00; }
-        .hidden-card { background: linear-gradient(135deg, #7a0000 0%, #b30000 100%); border: 1px solid var(--gold); }
-
-        .result-text { font-size: 12px; color: var(--gold); font-weight: bold; height: 18px; text-shadow: 1px 1px 2px black; }
-        .balance { font-size: 13px; color: #00ff00; font-weight: bold; }
-
-        /* Dealer Area */
+        /* Game UI */
+        .player { position: absolute; text-align: center; width: 100px; }
+        .p1 { bottom: 30px; left: 140px; } .p2 { left: 15px; top: 250px; } .p3 { left: 50px; top: 60px; }
+        .p4 { right: 50px; top: 60px; } .p5 { right: 15px; top: 250px; }
         .dealer-area { position: absolute; top: 250px; left: 140px; text-align: center; width: 100px; }
         
-        /* Controls */
-        .controls { 
-            position: absolute; bottom: 180px; width: 100%; 
-            text-align: center; display: none; z-index: 200; 
-        }
-
-        .btn { 
-            padding: 10px 20px; border-radius: 20px; border: none; 
-            font-weight: bold; cursor: pointer; margin: 0 5px; 
-            transition: 0.2s; box-shadow: 0 4px #999;
-        }
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px #666; }
-        .btn-hit { background: var(--gold); color: #000; } 
-        .btn-stay { background: #eee; color: #000; }
+        .avatar { width: 45px; height: 45px; background: #333; border: 2px solid var(--gold); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .cards-area { display: flex; justify-content: center; gap: -10px; height: 55px; margin-top: 5px; }
+        .card { width: 35px; height: 50px; background: white; color: black; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); opacity: 0; transform: translateY(-20px); transition: 0.4s; }
+        .card.dealt { opacity: 1; transform: translateY(0); }
+        .hidden-card { background: linear-gradient(135deg, #7a0000, #b30000); border: 1px solid var(--gold); color: transparent; }
         
-        .btn-main { 
-            position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%);
-            background: #ff4444; color: white; padding: 12px 30px; 
-            border-radius: 30px; border: 3px solid var(--gold); font-weight: bold; cursor: pointer; 
-        }
+        .result-text { font-size: 11px; color: var(--gold); font-weight: bold; height: 15px; }
+        .balance { font-size: 12px; color: #00ff00; }
+
+        .controls { position: absolute; bottom: 180px; width: 100%; text-align: center; display: none; }
+        .btn { padding: 10px 15px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin: 5px; }
+        .btn-hit { background: var(--gold); } .btn-stay { background: white; }
+        .btn-main { position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); background: #ff4444; color: white; padding: 12px 25px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-exit { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
+    <div id="lobby">
+        <h2 style="color: var(--gold);">Lucky Point Lobby</h2>
+        <p>သင့်လက်ကျန်ငွေ: <span id="lobby-balance">10000</span> ကျပ်</p>
+        
+        <div class="room-card" onclick="joinRoom(100, 500)">
+            <h3 style="margin:0; color: #00ff00;">Starter Room</h3>
+            <p style="font-size: 12px;">ဝင်ကြေး: 500 ကျပ် | လောင်းကြေး: 100 ကျပ်</p>
+        </div>
+
+        <div class="room-card" id="room2" onclick="joinRoom(1000, 5000)">
+            <h3 style="margin:0; color: var(--gold);">VIP Room</h3>
+            <p style="font-size: 12px;">ဝင်ကြေး: 5,000 ကျပ် | လောင်းကြေး: 1,000 ကျပ်</p>
+        </div>
+
+        <div class="room-card" id="room3" onclick="joinRoom(5000, 20000)">
+            <h3 style="margin:0; color: #ff4444;">High Roller</h3>
+            <p style="font-size: 12px;">ဝင်ကြေး: 20,000 ကျပ် | လောင်းကြေး: 5,000 ကျပ်</p>
+        </div>
+    </div>
+
+    <button class="btn-exit" onclick="showLobby()">ထွက်ရန်</button>
+    
     <div class="dealer-area">
-        <div style="color:var(--gold)">🎰 DEALER</div>
+        <div style="color:var(--gold); font-size: 12px;">🎰 DEALER</div>
         <div class="cards-area" id="cd"></div>
         <div id="rd" class="result-text"></div>
     </div>
 
+    <div class="player p1"><div class="avatar">😎</div><div class="cards-area" id="c1"></div><div id="r1" class="result-text"></div><div class="balance" id="b1">10000</div>YOU</div>
+    <div class="player p2"><div class="avatar">👤</div><div class="cards-area" id="c2"></div><div id="r2" class="result-text"></div><div class="balance" id="b2">10000</div></div>
     <div class="player p3"><div class="avatar">👤</div><div class="cards-area" id="c3"></div><div id="r3" class="result-text"></div><div class="balance" id="b3">10000</div></div>
     <div class="player p4"><div class="avatar">👤</div><div class="cards-area" id="c4"></div><div id="r4" class="result-text"></div><div class="balance" id="b4">10000</div></div>
-    <div class="player p2"><div class="avatar">👤</div><div class="cards-area" id="c2"></div><div id="r2" class="result-text"></div><div class="balance" id="b2">10000</div></div>
     <div class="player p5"><div class="avatar">👤</div><div class="cards-area" id="c5"></div><div id="r5" class="result-text"></div><div class="balance" id="b5">10000</div></div>
-    
-    <div class="player p1">
-        <div class="avatar" style="border-color: #00ff00;">😎</div>
-        <div class="cards-area" id="c1"></div>
-        <div id="r1" class="result-text"></div>
-        <div class="balance" id="b1">10000</div>
-        <div style="font-size: 12px;">YOU</div>
-    </div>
 
     <div id="action-btns" class="controls">
         <button class="btn btn-stay" onclick="userStay()">နားမည်</button>
@@ -140,146 +95,124 @@
 </div>
 
 <script>
-    const suits = ['♠', '♥', '♦', '♣'];
-    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    const vals = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':0, 'J':0, 'Q':0, 'K':0};
-    
+    let myBalance = 10000;
+    let currentBet = 0;
     let deck = [];
-    let balances = [10000, 10000, 10000, 10000, 10000];
     let hands = { dealer: [], p1: [], p2: [], p3: [], p4: [], p5: [] };
+    const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const vals = {'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':0,'J':0,'Q':0,'K':0};
+
+    function showLobby() {
+        document.getElementById('lobby').style.display = 'flex';
+        document.getElementById('lobby-balance').innerText = myBalance;
+        checkRoomLocks();
+    }
+
+    function checkRoomLocks() {
+        if(myBalance < 5000) document.getElementById('room2').classList.add('room-locked');
+        else document.getElementById('room2').classList.remove('room-locked');
+        
+        if(myBalance < 20000) document.getElementById('room3').classList.add('room-locked');
+        else document.getElementById('room3').classList.remove('room-locked');
+    }
+
+    function joinRoom(bet, min) {
+        if(myBalance < min) {
+            alert("ပိုက်ဆံမလောက်ပါဘူး! အနည်းဆုံး " + min + " ကျပ် ရှိမှ ဝင်လို့ရပါမယ်။");
+            return;
+        }
+        currentBet = bet;
+        document.getElementById('lobby').style.display = 'none';
+        document.getElementById('b1').innerText = myBalance;
+    }
 
     function createDeck() {
         deck = [];
-        for (let s of suits) {
-            for (let r of ranks) {
-                deck.push({ s, r, color: (s==='♥'||s==='♦') ? 'red' : 'black' });
-            }
-        }
+        for(let i=0; i<4; i++) for(let r of ranks) deck.push({r, s:['♠','♥','♦','♣'][i]});
         deck.sort(() => Math.random() - 0.5);
     }
 
-    function getPoints(hand) {
-        let sum = hand.reduce((acc, card) => acc + vals[card.r], 0);
-        return sum % 10;
-    }
-
     async function initGame() {
+        if(myBalance < currentBet) {
+            alert("ပိုက်ဆံကုန်သွားပါပြီ! Lobby ပြန်သွားပါ။");
+            showLobby();
+            return;
+        }
         document.getElementById('startBtn').style.display = 'none';
         resetTable();
         createDeck();
 
-        // Deal 2 cards each
-        for (let round = 0; round < 2; round++) {
-            for (let i = 1; i <= 5; i++) {
-                await dealCard('p' + i);
-            }
+        for(let r=0; r<2; r++) {
+            for(let i=1; i<=5; i++) await dealCard('p'+i);
             await dealCard('dealer');
         }
 
-        checkInitialWin();
+        let p1Pts = getPts(hands.p1);
+        renderHand('p1');
+        if(p1Pts >= 8) setTimeout(finalize, 1000);
+        else document.getElementById('action-btns').style.display = 'block';
     }
 
-    async function dealCard(playerId) {
+    async function dealCard(pid) {
         let card = deck.pop();
-        hands[playerId].push(card);
-        
-        let area = (playerId === 'dealer') ? 'cd' : 'c' + playerId.charAt(1);
-        let cardDiv = document.createElement('div');
-        
-        // Hide Dealer and User cards initially
-        if (playerId === 'dealer' || playerId === 'p1') {
-            cardDiv.className = 'card hidden-card';
-        } else {
-            cardDiv.className = `card dealt ${card.color}`;
-            cardDiv.innerHTML = `<span>${card.r}</span><span>${card.s}</span>`;
-        }
-        
-        document.getElementById(area).appendChild(cardDiv);
+        hands[pid].push(card);
+        let area = pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1);
+        let div = document.createElement('div');
+        div.className = (pid === 'p1' || pid === 'dealer') ? 'card hidden-card' : 'card';
+        if(div.className === 'card') div.innerText = card.r + card.s;
+        document.getElementById(area).appendChild(div);
+        setTimeout(() => div.classList.add('dealt'), 50);
         await new Promise(r => setTimeout(r, 150));
-        cardDiv.classList.add('dealt');
     }
 
-    function checkInitialWin() {
-        let userPts = getPoints(hands.p1);
-        // Show User cards
-        renderHand('p1', false);
-        
-        if (userPts >= 8) {
-            document.getElementById('r1').innerText = `ရှမ်း ${userPts} ပေါက်!`;
-            setTimeout(finalizeGame, 1000);
-        } else {
-            document.getElementById('action-btns').style.display = 'block';
-        }
+    function renderHand(pid) {
+        let area = pid === 'dealer' ? 'cd' : 'c' + pid.charAt(1);
+        document.getElementById(area).innerHTML = hands[pid].map(c => `<div class="card dealt">${c.r}${c.s}</div>`).join('');
+        let pts = getPts(hands[pid]);
+        document.getElementById('r'+(pid==='dealer'?'d':pid.charAt(1))).innerText = (pts >= 8 && hands[pid].length===2 ? "ရှမ်း " : "") + pts + " မှတ်";
     }
 
-    function renderHand(playerId, hidden = false) {
-        let area = (playerId === 'dealer') ? 'cd' : 'c' + playerId.charAt(1);
-        let html = hands[playerId].map(card => {
-            if (hidden) return `<div class="card dealt hidden-card"></div>`;
-            return `<div class="card dealt ${card.color}"><span>${card.r}</span><span>${card.s}</span></div>`;
-        }).join('');
-        document.getElementById(area).innerHTML = html;
-        
-        let pts = getPoints(hands[playerId]);
-        let label = (pts >= 8 && hands[playerId].length === 2) ? `ရှမ်း ${pts}` : `${pts} မှတ်`;
-        document.getElementById('r' + (playerId === 'dealer' ? 'd' : playerId.charAt(1))).innerText = label;
-    }
+    function getPts(h) { return h.reduce((s, c) => s + vals[c.r], 0) % 10; }
 
     async function userHit() {
         document.getElementById('action-btns').style.display = 'none';
         await dealCard('p1');
-        renderHand('p1', false);
-        setTimeout(finalizeGame, 500);
+        renderHand('p1');
+        finalize();
     }
 
     function userStay() {
         document.getElementById('action-btns').style.display = 'none';
-        finalizeGame();
+        finalize();
     }
 
-    async function finalizeGame() {
-        // Bots Logic
-        for (let i = 2; i <= 5; i++) {
-            let pid = 'p' + i;
-            let pts = getPoints(hands[pid]);
-            if (pts < 4) {
-                await dealCard(pid);
-                renderHand(pid, false);
-            }
-        }
+    async function finalize() {
+        renderHand('p1');
+        // Dealer simple logic
+        renderHand('dealer');
+        let dPts = getPts(hands.dealer);
+        if(dPts < 4) { await dealCard('dealer'); renderHand('dealer'); dPts = getPts(hands.dealer); }
 
-        // Dealer Logic
-        renderHand('dealer', false);
-        let dPts = getPoints(hands.dealer);
-        if (dPts < 4) {
-            await dealCard('dealer');
-            renderHand('dealer', false);
-            dPts = getPoints(hands.dealer);
-        }
+        // Bots and Scoring
+        let p1Pts = getPts(hands.p1);
+        if(p1Pts > dPts) myBalance += currentBet;
+        else if(p1Pts < dPts) myBalance -= currentBet;
 
-        // Update Scores
-        for (let i = 1; i <= 5; i++) {
-            let pPts = getPoints(hands['p' + i]);
-            if (pPts > dPts) balances[i-1] += 500;
-            else if (pPts < dPts) balances[i-1] -= 500;
-            document.getElementById('b' + i).innerText = balances[i-1];
-        }
-
+        document.getElementById('b1').innerText = myBalance;
         document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('startBtn').innerText = "ထပ်ကစားမည်";
+        document.getElementById('startBtn').innerText = "နောက်တစ်ပွဲ";
     }
 
     function resetTable() {
-        for (let i = 1; i <= 5; i++) {
-            document.getElementById('c' + i).innerHTML = "";
-            document.getElementById('r' + i).innerText = "";
-            hands['p' + i] = [];
+        for(let i=1; i<=5; i++) {
+            document.getElementById('c'+i).innerHTML = "";
+            document.getElementById('r'+i).innerText = "";
+            hands['p'+i] = [];
         }
         document.getElementById('cd').innerHTML = "";
         document.getElementById('rd').innerText = "";
         hands.dealer = [];
     }
 </script>
-
 </body>
 </html>
