@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Point Shan Koe Mee Pro</title>
+    <style>
+        body { background-color: #0b2b18; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
+        .game-container { position: relative; width: 360px; height: 620px; background: radial-gradient(circle, #2d5a3f 0%, #0b2b18 100%); border: 12px solid #3d2610; border-radius: 40px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .player { position: absolute; text-align: center; width: 90px; }
+        .p1 { bottom: 20px; left: 135px; z-index: 100; } .p2 { left: 10px; top: 220px; } .p3 { left: 40px; top: 40px; } .p4 { right: 40px; top: 40px; } .p5 { right: 10px; top: 220px; }
+        .avatar { width: 45px; height: 45px; background: #222; border: 2px solid gold; border-radius: 50%; margin: 0 auto; }
+        .cards-area { display: flex; justify-content: center; gap: 3px; margin-top: 5px; height: 50px; perspective: 1000px; }
+        .card { width: 32px; height: 48px; background: white; color: black; border-radius: 5px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 8px rgba(0,0,0,0.5); 
+                opacity: 0; transform: translate(0, -200px) rotate(180deg); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card.dealt { opacity: 1; transform: translate(0,0) rotate(0); }
+        .hidden-card { background: linear-gradient(45deg, #7a0000, #b30000); color: transparent !important; border: 1px solid gold; }
+        .result-text { font-size: 11px; color: gold; font-weight: bold; margin-top: 3px; min-height: 15px; }
+        .points { font-size: 12px; color: #00ff00; font-weight: bold; }
+        .dealer-area { position: absolute; top: 240px; left: 135px; text-align: center; width: 90px; color: gold; font-weight: bold; }
+        
+        .controls { position: absolute; bottom: 155px; width: 100%; text-align: center; display: none; z-index: 200; }
+        .btn { padding: 10px 18px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin: 0 5px; box-shadow: 0 4px #333; }
+        .btn-hit { background: #ffd700; color: #333; } .btn-stay { background: #ffffff; color: #333; }
+        .btn-deal { position: absolute; bottom: 155px; left: 125px; background: gold; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="dealer-area">🎰 DEALER<div class="cards-area" id="cd"></div><div id="rd" class="result-text"></div></div>
+        
+        <div class="player p3"><div class="avatar"></div><div class="cards-area" id="c3"></div><div id="r3" class="result-text"></div><div class="points" id="p3_pts">10000</div>P-3</div>
+        <div class="player p4"><div class="avatar"></div><div class="cards-area" id="c4"></div><div id="r4" class="result-text"></div><div class="points" id="p4_pts">10000</div>P-4</div>
+        <div class="player p2"><div class="avatar"></div><div class="cards-area" id="c2"></div><div id="r2" class="result-text"></div><div class="points" id="p2_pts">10000</div>P-2</div>
+        <div class="player p5"><div class="avatar"></div><div class="cards-area" id="c5"></div><div id="r5" class="result-text"></div><div class="points" id="p5_pts">10000</div>P-5</div>
+        
+        <div class="player p1">
+            <div class="avatar"></div><div class="cards-area" id="c1"></div>
+            <div id="user-actions" style="margin-top: 5px;"></div>
+            <div id="r1" class="result-text"></div><div class="points" id="p1_pts">10000</div>You
+        </div>
+
+        <div id="choice-controls" class="controls">
+            <button class="btn btn-stay" onclick="stay()">နားမည်</button>
+            <button class="btn btn-hit" onclick="hit()">ဆွဲမည်</button>
+        </div>
+
+        <button class="btn-deal" id="dealBtn" onclick="startSequentialDeal()">ဖဲဝေမည်</button>
+    </div>
+
+    <script>
+        let scores = [10000, 10000, 10000, 10000, 10000];
+        const suits = ['♠️', '♥️', '♦️', '♣️'], ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const vals = {'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':0,'J':0,'Q':0,'K':0};
+        let myHand = [], dHand = [], dPts = 0, botsHandData = [];
+
+        async function startSequentialDeal() {
+            document.getElementById('dealBtn').style.display = 'none';
+            for(let i=1; i<=5; i++) { document.getElementById('c'+i).innerHTML = ""; document.getElementById('r'+i).innerText = ""; }
+            document.getElementById('cd').innerHTML = ""; document.getElementById('rd').innerText = "";
+            document.getElementById('user-actions').innerHTML = "";
+            myHand = []; botsHandData = [];
+
+            // ဒိုင်ကတ် ကြိုထုတ်
+            dHand = [getCard(), getCard()];
+            dPts = (vals[dHand[0].r] + vals[dHand[1].r]) % 10;
+
+            // တရွက်ချင်းစီ ပတ်ဝေမည် (Animation)
+            for(let r=0; r<2; r++) {
+                for(let p=1; p<=5; p++) {
+                    let card = getCard();
+                    if(p===1) myHand.push(card); else {
+                        if(r===0) botsHandData[p-2] = [card]; else botsHandData[p-2].push(card);
+                    }
+                    
+                    let cardDiv = document.createElement('div');
+                    cardDiv.className = 'card' + (p===1 ? ' hidden-card' : '');
+                    cardDiv.innerText = p===1 ? '?' : card.s + card.r;
+                    document.getElementById('c'+p).appendChild(cardDiv);
+                    
+                    await new Promise(res => setTimeout(() => { cardDiv.classList.add('dealt'); res(); }, 200));
+                }
+            }
+
+            // ဝေပြီးရင် "ကြည့်မည်" ခလုတ်ပြ
+            document.getElementById('user-actions').innerHTML = `<button class="btn btn-hit" onclick="reveal()">ကြည့်မည်</button>`;
+        }
+
+        function reveal() {
+            let p = (vals[myHand[0].r] + vals[myHand[1].r]) % 10;
+            document.getElementById('c1').innerHTML = myHand.map(c => `<div class="card dealt">${c.s}${c.r}</div>`).join('');
+            document.getElementById('r1').innerText = (p >= 8 ? "ရှမ်း " : "") + p + " မှတ်";
+            document.getElementById('user-actions').innerHTML = "";
+            
+            if (p >= 8) finalizeGame(p); else document.getElementById('choice-controls').style.display = 'block';
+        }
+
+        async function hit() {
+            document.getElementById('choice-controls').style.display = 'none';
+            let c3 = getCard(); myHand.push(c3);
+            let cardDiv = document.createElement('div');
+            cardDiv.className = 'card'; cardDiv.innerText = c3.s + c3.r;
+            document.getElementById('c1').appendChild(cardDiv);
+            setTimeout(() => cardDiv.classList.add('dealt'), 50);
+            
+            let p = myHand.reduce((a, b) => a + vals[b.r], 0) % 10;
+            document.getElementById('r1').innerText = p + " မှတ်";
+            finalizeGame(p);
+        }
+
+        function stay() {
+            document.getElementById('choice-controls').style.display = 'none';
+            let p = (vals[myHand[0].r] + vals[myHand[1].r]) % 10;
+            finalizeGame(p);
+        }
+
+        async function finalizeGame(userPts) {
+            // Bots များ ၃ ချပ်မြောက်ဆွဲခြင်း (အလိုအလျောက်)
+            for(let i=2; i<=5; i++) {
+                let h = botsHandData[i-2];
+                let p = (vals[h[0].r] + vals[h[1].r]) % 10;
+                if(p < 4) {
+                    let c3 = getCard(); h.push(c3);
+                    p = (p + vals[c3.r]) % 10;
+                    let c3Div = document.createElement('div');
+                    c3Div.className = 'card dealt'; c3Div.innerText = c3.s + c3.r;
+                    document.getElementById('c'+i).appendChild(c3Div);
+                }
+                document.getElementById('r'+i).innerText = (p >= 8 && h.length===2 ? "ရှမ်း " : "") + p + " မှတ်";
+                updateScore(i, p, dPts);
+            }
+
+            // ဒိုင်ဖွင့်
+            document.getElementById('cd').innerHTML = dHand.map(c => `<div class="card dealt">${c.s}${c.r}</div>`).join('');
+            document.getElementById('rd').innerText = (dPts >= 8 ? "ရှမ်း " : "") + dPts + " မှတ်";
+            updateScore(1, userPts, dPts);
+            document.getElementById('dealBtn').style.display = 'block';
+        }
+
+        function updateScore(idx, p, dp) {
+            if(p > dp) scores[idx-1] += 500; else if(p < dp) scores[idx-1] -= 500;
+            document.getElementById('p'+idx+'_pts').innerText = scores[idx-1];
+        }
+
+        function getCard() { return {s: suits[Math.floor(Math.random()*4)], r: ranks[Math.floor(Math.random()*13)]}; }
+    </script>
+</body>
+</html>
