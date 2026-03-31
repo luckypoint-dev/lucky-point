@@ -26,6 +26,13 @@
     </style>
 </head>
 <body>
+    <div id="room-menu" style="background: rgba(0,0,0,0.95); position: fixed; width: 100%; height: 100%; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: gold; top: 0; left: 0; font-family: sans-serif;">
+    <h2 style="font-size: 24px; margin-bottom: 10px;">🎰 LUCKY POINT 🎰</h2>
+    <p style="margin-bottom: 20px;">ကစားမည့်ဝိုင်းကို ရွေးချယ်ပါ</p>
+    <button onclick="selectRoom(100)" style="background: #28a745; color: white; padding: 12px; margin: 8px; width: 220px; border-radius: 10px; border: 2px solid gold; font-weight: bold; font-size: 16px; cursor: pointer;">သံပုရာသီးဝိုင်း (၁၀၀ စား)</button>
+    <button onclick="selectRoom(500)" style="background: #007bff; color: white; padding: 12px; margin: 8px; width: 220px; border-radius: 10px; border: 2px solid gold; font-weight: bold; font-size: 16px; cursor: pointer;">ရွှေဖလားဝိုင်း (၅၀၀ စား)</button>
+    <button onclick="selectRoom(1000)" style="background: #dc3545; color: white; padding: 12px; margin: 8px; width: 220px; border-radius: 10px; border: 2px solid gold; font-weight: bold; font-size: 16px; cursor: pointer;">စိန်စီဝိုင်း (၁၀၀၀ စား)</button>
+    </div>
     <div class="game-container">
         <div class="dealer-area">🎰 DEALER<div class="cards-area" id="cd"></div><div id="rd" class="result-text"></div></div>
         
@@ -143,6 +150,12 @@
         }
 
         function getCard() { return {s: suits[Math.floor(Math.random()*4)], r: ranks[Math.floor(Math.random()*13)]}; }
-    </script>
-</body>
-</html>
+    let currentBet = 100; 
+
+function selectRoom(amount) {
+    currentBet = amount;
+    document.getElementById('room-menu').style.display = 'none';
+}
+        
+
+
