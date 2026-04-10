@@ -1,86 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TON Jackpot</title>
-
-<style>
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0b132b;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle at top, #0f2027, #0b132b);
+  color: white;
 }
 
-.card {
-    background: #1c2541;
-    padding: 30px;
-    border-radius: 20px;
-    text-align: center;
-    color: white;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    width: 300px;
+.container {
+  padding: 20px;
 }
 
-h1 {
-    margin-bottom: 10px;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-h2 {
-    margin-bottom: 20px;
+.wallet-btn {
+  background: linear-gradient(90deg, #00f2fe, #4facfe);
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  box-shadow: 0 0 10px rgba(0,255,255,0.5);
 }
 
-button {
-    background: #28a745;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-size: 18px;
-    color: white;
-    cursor: pointer;
+.stat-box {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  padding: 15px;
+  border-radius: 15px;
+  width: 30%;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
-button:hover {
-    background: #218838;
+.room {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
 }
-</style>
-</head>
 
-<body>
-
-<div class="card">
-    <h1>🎰 TON Jackpot</h1>
-    <h2 id="balance">Balance: 10 TON</h2>
-    <button onclick="playGame()">Play</button>
-</div>
-
-<script>
-let balance = 10;
-
-function playGame() {
-    let result = Math.random();
-
-    if (result > 0.7) {
-        // Win
-        let winAmount = Math.floor(Math.random() * 5) + 1;
-        balance += winAmount;
-        alert("🎉 You win " + winAmount + " TON!");
-    } else {
-        // Lose
-        let loseAmount = Math.floor(Math.random() * 3) + 1;
-        balance -= loseAmount;
-        alert("😢 You lose " + loseAmount + " TON!");
-    }
-
-    if (balance < 0) balance = 0;
-
-    document.getElementById("balance").innerText = "Balance: " + balance + " TON";
+.enter-btn {
+  background: linear-gradient(90deg, #00c853, #00e676);
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  width: 100%;
+  margin-top: 10px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0,255,100,0.5);
 }
-</script>
-
-</body>
-</html>
