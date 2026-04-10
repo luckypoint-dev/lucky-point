@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TON Lotto</title>
+
+<style>
 body {
   margin: 0;
   font-family: Arial;
@@ -21,26 +29,28 @@ body {
   border-radius: 12px;
   border: none;
   color: white;
-  box-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
 }
 
 .stat-box {
   background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
   padding: 15px;
   border-radius: 15px;
   width: 30%;
   text-align: center;
-  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
 .room {
   background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(15px);
   margin-top: 20px;
   padding: 20px;
   border-radius: 20px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  text-align: center;
 }
 
 .enter-btn {
@@ -52,5 +62,122 @@ body {
   margin-top: 10px;
   color: white;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(0,255,100,0.5);
 }
+
+.countdown {
+  margin-top: 10px;
+  font-size: 18px;
+  color: #00e676;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h2>💎 TON Lotto</h2>
+    <button class="wallet-btn">Connect Wallet</button>
+  </div>
+
+  <h1>Win TON Prizes</h1>
+  <p>Join room, wait countdown, win randomly!</p>
+
+  <div class="stats">
+    <div class="stat-box">
+      <p>Total Draws</p>
+      <h3 id="draws">0</h3>
+    </div>
+
+    <div class="stat-box">
+      <p>TON Distributed</p>
+      <h3 id="ton">0</h3>
+    </div>
+
+    <div class="stat-box">
+      <p>Players</p>
+      <h3 id="players">0</h3>
+    </div>
+  </div>
+
+  <h3>⚡ Choose Room</h3>
+
+  <div class="room">
+    <p>Entry: 0.1 TON</p>
+    <h2>Prize Pool: <span id="pool">0</span> TON</h2>
+    <p>Players: <span id="count">0</span>/20</p>
+
+    <div class="countdown" id="countdown"></div>
+
+    <button class="enter-btn" onclick="enterRoom()">Enter Room</button>
+  </div>
+
+</div>
+
+<script>
+let players = 0;
+let pool = 0;
+let draws = 0;
+let totalTon = 0;
+let countdownActive = false;
+
+function enterRoom() {
+  if (players < 20 && !countdownActive) {
+    players++;
+    pool += 0.1;
+
+    updateUI();
+
+    if (players === 20) {
+      startCountdown();
+    }
+  }
+}
+
+function updateUI() {
+  document.getElementById("count").innerText = players;
+  document.getElementById("pool").innerText = pool.toFixed(2);
+  document.getElementById("players").innerText = players;
+}
+
+function startCountdown() {
+  countdownActive = true;
+  let time = 5;
+
+  let interval = setInterval(() => {
+    document.getElementById("countdown").innerText =
+      "⏳ Drawing in " + time + "s";
+
+    time--;
+
+    if (time < 0) {
+      clearInterval(interval);
+      pickWinner();
+    }
+  }, 1000);
+}
+
+function pickWinner() {
+  draws++;
+  totalTon += pool;
+
+  document.getElementById("draws").innerText = draws;
+  document.getElementById("ton").innerText = totalTon.toFixed(2);
+
+  let winner = Math.floor(Math.random() * players);
+
+  alert("🎉 Winner is Player #" + (winner + 1));
+
+  // reset
+  players = 0;
+  pool = 0;
+  countdownActive = false;
+
+  document.getElementById("countdown").innerText = "";
+  updateUI();
+}
+</script>
+
+</body>
+</html>
