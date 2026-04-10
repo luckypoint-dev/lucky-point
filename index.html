@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TON Lotto</title>
 
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
 <style>
 body {
     margin: 0;
@@ -18,36 +20,19 @@ body {
     padding: 20px;
 }
 
-h1 {
-    font-size: 28px;
-}
-
-.card {
-    background: #1c2541;
-    padding: 20px;
-    border-radius: 15px;
-    margin: 15px;
-}
-
-.row {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-}
-
-.box {
-    background: #3a506b;
-    padding: 15px;
-    border-radius: 10px;
-    width: 30%;
-}
-
 .button {
     background: #00c853;
     padding: 15px;
     border-radius: 10px;
-    margin-top: 20px;
+    margin-top: 15px;
     cursor: pointer;
+}
+
+.wallet {
+    background: #1c2541;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 15px;
 }
 </style>
 
@@ -58,54 +43,46 @@ h1 {
 
 <h1>💎 TON Lotto</h1>
 
-<h2>Win TON Prizes</h2>
-<p>Join room, wait countdown, win randomly!</p>
-
-<div class="row">
-    <div class="box">
-        <p>Total Draws</p>
-        <h2 id="draws">0</h2>
-    </div>
-    <div class="box">
-        <p>TON Distributed</p>
-        <h2 id="distributed">0</h2>
-    </div>
-    <div class="box">
-        <p>Players</p>
-        <h2 id="players">0/20</h2>
-    </div>
+<div class="wallet">
+    <div id="connectBtn"></div>
+    <p id="walletAddress">Wallet: Not Connected</p>
 </div>
 
-<div class="card">
-    <p>Entry: 0.1 TON</p>
-    <h2>Prize Pool: <span id="prize">0 TON</span></h2>
-    <p>Players: <span id="players2">0/20</span></p>
-    <p>Time: <span id="timer">15s</span></p>
+<p>Players: <span id="players">0/20</span></p>
+<p>Prize Pool: <span id="prize">0 TON</span></p>
+<p>Time: <span id="timer">15s</span></p>
 
-    <div class="button" onclick="joinRoom()">Enter Room</div>
-</div>
+<div class="button" onclick="joinRoom()">Enter Room</div>
 
 </div>
 
 <script>
+// TON Connect
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: 'https://luckypoint-dev.github.io/lucky-point/tonconnect-manifest.json',
+    buttonRootId: 'connectBtn'
+});
+
+// wallet address display
+tonConnectUI.onStatusChange(wallet => {
+    if (wallet) {
+        document.getElementById("walletAddress").innerText =
+            "Wallet: " + wallet.account.address.slice(0, 6) + "...";
+    }
+});
+
+// Game Logic
 let players = 0;
 let maxPlayers = 20;
 let entry = 0.1;
 let countdown = 15;
 
-let totalDraws = 0;
-let totalDistributed = 0;
-
 function updateUI() {
     document.getElementById("players").innerText = players + "/" + maxPlayers;
-    document.getElementById("players2").innerText = players + "/" + maxPlayers;
     document.getElementById("prize").innerText = (players * entry).toFixed(2) + " TON";
     document.getElementById("timer").innerText = countdown + "s";
-    document.getElementById("draws").innerText = totalDraws;
-    document.getElementById("distributed").innerText = totalDistributed.toFixed(2);
 }
 
-// Player join button
 function joinRoom() {
     if (players < maxPlayers) {
         players++;
@@ -115,7 +92,7 @@ function joinRoom() {
     }
 }
 
-// Auto players
+// auto players
 setInterval(() => {
     if (players < maxPlayers) {
         players += Math.random() > 0.6 ? 1 : 0;
@@ -123,14 +100,14 @@ setInterval(() => {
     }
 }, 2000);
 
-// Countdown
+// countdown
 setInterval(() => {
     if (countdown > 0) {
         countdown--;
     } else {
         pickWinner();
         countdown = 15;
-        players = Math.floor(Math.random() * 5) + 1;
+        players = Math.floor(Math.random() * 5);
     }
     updateUI();
 }, 1000);
@@ -140,9 +117,6 @@ function pickWinner() {
 
     let prize = players * entry;
     let winner = Math.floor(Math.random() * players) + 1;
-
-    totalDraws++;
-    totalDistributed += prize;
 
     alert("🎉 Player " + winner + " wins " + prize.toFixed(2) + " TON!");
 }
