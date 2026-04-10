@@ -20,19 +20,28 @@ body {
     padding: 20px;
 }
 
+.card {
+    background: #1c2541;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
 .button {
     background: #00c853;
     padding: 15px;
     border-radius: 10px;
     margin-top: 15px;
     cursor: pointer;
+    border: none;
+    color: white;
+    font-size: 16px;
 }
 
 .wallet {
-    background: #1c2541;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    opacity: 0.8;
 }
 </style>
 
@@ -43,35 +52,46 @@ body {
 
 <h1>💎 TON Lotto</h1>
 
-<div class="wallet">
-    <div id="connectBtn"></div>
-    <p id="walletAddress">Wallet: Not Connected</p>
+<div class="card">
+    <button id="connectBtn" class="button">Connect Wallet</button>
+    <p id="walletAddress" class="wallet">Wallet: Not Connected</p>
 </div>
 
-<p>Players: <span id="players">0/20</span></p>
-<p>Prize Pool: <span id="prize">0 TON</span></p>
-<p>Time: <span id="timer">15s</span></p>
+<div class="card">
+    <p>Players: <span id="players">0/20</span></p>
+    <p>Prize Pool: <span id="prize">0 TON</span></p>
+    <p>⏳ Time: <span id="timer">15s</span></p>
 
-<div class="button" onclick="joinRoom()">Enter Room</div>
+    <button class="button" onclick="joinRoom()">Enter Room</button>
+</div>
 
 </div>
 
 <script>
-// TON Connect
+// =======================
+// TON CONNECT
+// =======================
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl: 'https://luckypoint-dev.github.io/lucky-point/tonconnect-manifest.json',
-    buttonRootId: 'connectBtn'
+    manifestUrl: 'https://luckypoint-dev.github.io/lucky-point/tonconnect-manifest.json'
 });
+
+// button click → open wallet popup
+document.getElementById("connectBtn").onclick = () => {
+    tonConnectUI.openModal();
+};
 
 // wallet address display
 tonConnectUI.onStatusChange(wallet => {
     if (wallet) {
         document.getElementById("walletAddress").innerText =
-            "Wallet: " + wallet.account.address.slice(0, 6) + "...";
+            "Wallet: " + wallet.account.address.slice(0, 6) + "...CONNECTED";
     }
 });
 
-// Game Logic
+
+// =======================
+// GAME LOGIC
+// =======================
 let players = 0;
 let maxPlayers = 20;
 let entry = 0.1;
@@ -83,6 +103,7 @@ function updateUI() {
     document.getElementById("timer").innerText = countdown + "s";
 }
 
+// join room
 function joinRoom() {
     if (players < maxPlayers) {
         players++;
@@ -92,10 +113,12 @@ function joinRoom() {
     }
 }
 
-// auto players
+// auto players (fake users)
 setInterval(() => {
     if (players < maxPlayers) {
-        players += Math.random() > 0.6 ? 1 : 0;
+        if (Math.random() > 0.5) {
+            players++;
+        }
         updateUI();
     }
 }, 2000);
@@ -112,16 +135,18 @@ setInterval(() => {
     updateUI();
 }, 1000);
 
+// winner system
 function pickWinner() {
-    if (players == 0) return;
+    if (players === 0) return;
 
     let prize = players * entry;
     let winner = Math.floor(Math.random() * players) + 1;
 
-    alert("🎉 Player " + winner + " wins " + prize.toFixed(2) + " TON!");
+    alert("🎉 Winner: Player #" + winner + " wins " + prize.toFixed(2) + " TON!");
 }
 
 updateUI();
+
 </script>
 
 </body>
