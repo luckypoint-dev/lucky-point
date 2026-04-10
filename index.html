@@ -39,9 +39,8 @@ body {
 }
 
 .wallet {
-    margin-bottom: 10px;
+    margin-top: 10px;
     font-size: 14px;
-    opacity: 0.8;
 }
 </style>
 
@@ -75,55 +74,80 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://luckypoint-dev.github.io/lucky-point/tonconnect-manifest.json'
 });
 
-// button click → open wallet popup
 document.getElementById("connectBtn").onclick = () => {
     tonConnectUI.openModal();
 };
 
-// wallet address display
 tonConnectUI.onStatusChange(wallet => {
     if (wallet) {
         document.getElementById("walletAddress").innerText =
-            "Wallet: " + wallet.account.address.slice(0, 6) + "...CONNECTED";
+            "Wallet: " + wallet.account.address.slice(0,6) + "...CONNECTED";
     }
 });
-
 
 // =======================
 // GAME LOGIC
 // =======================
 let players = 0;
 let maxPlayers = 20;
-let entry = 0.1;
+let entry = 0.01; // safer test
 let countdown = 15;
 
+// update UI
 function updateUI() {
     document.getElementById("players").innerText = players + "/" + maxPlayers;
     document.getElementById("prize").innerText = (players * entry).toFixed(2) + " TON";
     document.getElementById("timer").innerText = countdown + "s";
 }
 
-// join room
-function joinRoom() {
-    if (players < maxPlayers) {
+// =======================
+// PAYMENT + JOIN
+// =======================
+async function joinRoom() {
+
+    if (!tonConnectUI.connected) {
+        alert("⚠️ Connect wallet first!");
+        return;
+    }
+
+    const tx = {
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [
+            {
+                address: "EQxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // 🔥 CHANGE THIS
+                amount: "10000000" // 0.01 TON (test first)
+            }
+        ]
+    };
+
+    try {
+        await tonConnectUI.sendTransaction(tx);
+
         players++;
         updateUI();
-    } else {
-        alert("Room Full!");
+
+        alert("✅ Payment successful! You joined the room.");
+
+    } catch (e) {
+        alert("❌ Transaction cancelled");
     }
 }
 
-// auto players (fake users)
+// =======================
+// AUTO PLAYERS (DEMO)
+// =======================
 setInterval(() => {
     if (players < maxPlayers) {
         if (Math.random() > 0.5) {
             players++;
+            updateUI();
         }
-        updateUI();
     }
 }, 2000);
 
-// countdown
+// =======================
+// COUNTDOWN
+// =======================
 setInterval(() => {
     if (countdown > 0) {
         countdown--;
@@ -135,7 +159,9 @@ setInterval(() => {
     updateUI();
 }, 1000);
 
-// winner system
+// =======================
+// WINNER
+// =======================
 function pickWinner() {
     if (players === 0) return;
 
